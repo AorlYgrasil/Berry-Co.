@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+const jwtSecret = process.env.JWT_SECRET || 'berry-co-demo-secret';
+const secret = new TextEncoder().encode(jwtSecret);
 
 export interface AdminPayload {
   id: string;

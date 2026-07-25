@@ -1,4 +1,3 @@
-// Placeholder stats — replace with real database queries later.
 const stats = [
   { label: 'Total Products', value: '—' },
   { label: 'Total Orders', value: '—' },
