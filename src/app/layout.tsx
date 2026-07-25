@@ -1,7 +1,6 @@
 import './globals.css'
 import Navbar from '../components/ui/navbar'
 import Footer from '../components/ui/footer'
-import Hero from '../components/ui/hero'
 
 export default function RootLayout({
     children,
@@ -14,7 +13,7 @@ export default function RootLayout({
             <body>
                 <Navbar />
 
-                <main><Hero /></main>
+                <main>{children}</main>
 
                 <Footer />
             </body>
