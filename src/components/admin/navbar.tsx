@@ -1,14 +1,31 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
+import { LogOut, Menu } from 'lucide-react'
 import { logoutAdmin } from '@/lib/actions/auth'
 
 export default function AdminNavbar({
   name,
   avatarUrl,
+  onMenuClick,
 }: {
   name: string
   avatarUrl?: string | null
+  onMenuClick?: () => void
 }) {
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   const initials = name
     .split(' ')
     .map((part) => part[0])
@@ -17,48 +34,47 @@ export default function AdminNavbar({
     .toUpperCase()
 
   return (
-    <div className="navbar bg-base-100 border-b border-base-300 px-4 lg:px-6">
-      <div className="flex-1">
-        <label htmlFor="admin-drawer" className="btn btn-square btn-ghost lg:hidden">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </label>
-      </div>
+    <div className="flex items-center justify-between border-b border-stone-200 bg-white px-4 py-3 lg:px-6">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        className="rounded-lg p-2 text-stone-500 hover:bg-stone-100 lg:hidden"
+        aria-label="Open menu"
+      >
+        <Menu size={20} />
+      </button>
 
-      <div className="flex-none dropdown dropdown-end">
-        <button tabIndex={0} className="btn btn-ghost gap-2 normal-case">
-          <div className="avatar placeholder">
-            <div className="bg-primary text-primary-content w-8 rounded-full">
-              {avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarUrl} alt={name} />
-              ) : (
-                <span className="text-xs">{initials}</span>
-              )}
-            </div>
-          </div>
-          <span className="hidden sm:inline text-sm">{name}</span>
-        </button>
-        <ul
-          tabIndex={0}
-          className="dropdown-content menu menu-sm mt-3 z-30 p-2 shadow bg-base-100 rounded-box w-44"
+      <div className="flex-1" />
+
+      <div className="relative" ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 hover:bg-stone-100"
         >
-          <li>
-            <button onClick={() => logoutAdmin()}>Log out</button>
-          </li>
-        </ul>
+          <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#d9483a] text-xs font-semibold text-white">
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
+          </div>
+          <span className="hidden text-sm font-medium text-stone-700 sm:inline">{name}</span>
+        </button>
+
+        {open && (
+          <div className="absolute right-0 z-30 mt-2 w-44 rounded-xl border border-stone-200 bg-white p-1.5 shadow-lg">
+            <button
+              type="button"
+              onClick={() => logoutAdmin()}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-600 hover:bg-stone-100"
+            >
+              <LogOut size={15} />
+              Log out
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
