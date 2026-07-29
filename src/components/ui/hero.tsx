@@ -1,22 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Hero() {
-  // 6 dummy cards so you can clearly see the carousel slide
   const cards = [
-    { id: 1 },
-    { id: 2 },
-    { id: 3 },
-    { id: 4 },
-    { id: 5 },
-    { id: 6 },
+    { id: 1, title: 'Card 1' },
+    { id: 2, title: 'Card 2' },
+    { id: 3, title: 'Card 3' },
+    { id: 4, title: 'Card 4' },
+    { id: 5, title: 'Card 5' },
+    { id: 6, title: 'Card 6' },
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(3);
 
-  // Showing 3 cards at a time on desktop (max index is total - 3)
-  const maxIndex = cards.length - 3;
+  // Dynamically update items per page based on viewport size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setItemsPerPage(1); // 1 card on mobile
+      } else {
+        setItemsPerPage(3); // 3 cards on desktop
+      }
+    };
+
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const maxIndex = Math.max(0, cards.length - itemsPerPage);
+
+  // Clamp current index if window resize reduces maxIndex
+  useEffect(() => {
+    if (currentIndex > maxIndex) {
+      setCurrentIndex(maxIndex);
+    }
+  }, [maxIndex, currentIndex]);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
@@ -24,6 +45,16 @@ export default function Hero() {
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev < maxIndex ? prev + 1 : 0));
+  };
+
+  // Calculate pixel-accurate translation string based on screen layout
+  const getTranslateX = () => {
+    if (itemsPerPage === 1) {
+      // Mobile: Shift by 100% card width + gap (1.5rem / 24px)
+      return `calc(-${currentIndex} * (100% + 1.5rem))`;
+    }
+    // Desktop: Shift by 1/3 width + 1/3 gap adjustment
+    return `calc(-${currentIndex} * (100% / 3 + 0.5rem))`;
   };
 
   return (
@@ -35,7 +66,7 @@ export default function Hero() {
           <div
             className="flex gap-6 transition-transform duration-500 ease-out"
             style={{
-              transform: `translateX(calc(-${currentIndex} * (100% / 3 + 0.5rem)))`,
+              transform: `translateX(${getTranslateX()})`,
             }}
           >
             {cards.map((card) => (
@@ -79,6 +110,7 @@ export default function Hero() {
         {Array.from({ length: maxIndex + 1 }).map((_, idx) => (
           <button
             key={idx}
+            type="button"
             onClick={() => setCurrentIndex(idx)}
             aria-label={`Go to slide ${idx + 1}`}
             className={`h-2.5 rounded-full transition-all duration-300 ${

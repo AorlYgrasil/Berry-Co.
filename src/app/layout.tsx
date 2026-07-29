@@ -7,16 +7,11 @@ export default function RootLayout({
 }: {
     children: React.ReactNode
 }) {
-
-    return(
+    return (
         <html lang="en">
-            
-                <body className="min-h-screen flex flex-col bg-[#EAD0AA] text-[#35322E]">
-
+            <body className="min-h-screen flex flex-col bg-background text-dark">
                 <Navbar />
-
-                <main>{children}</main>
-
+                <main className="flex-1 flex flex-col">{children}</main>
                 <Footer />
             </body>
         </html>
