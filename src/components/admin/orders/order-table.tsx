@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import OrderStatusBadge from './order-status-badge'
+import PaymentStatusBadge from './payment-status-badge'
 import type { OrderWithShipping } from '@/lib/data/orders'
 
 export default function OrderTable({
