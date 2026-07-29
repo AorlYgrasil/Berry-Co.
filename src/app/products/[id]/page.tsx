@@ -11,18 +11,24 @@ type PageProps = {
 export default function ProductDetailPage({ params }: PageProps) {
   const { id } = use(params);
 
-  // Dynamic / Mock product attributes
+  // #region MOCK DATA (To be replaced with database fetch using `id`)
   const product = {
     id,
     name: `Deck ${id}`,      // Current Item
     category: "Cards",       // Category
     brand: "Deckdrop",       // Brand
-    series: "Pokemon",      // Series
+    series: "Pokemon",       // Series
     price: "₱120",
     status: "Pre-orders Open",
     tag: "Tag name",
     preorderPeriod: "2026/04/28 ~ 2026/06/10 (JST)",
   };
+  // #endregion MOCK DATA
+
+  // Encoded URL parameter strings for breadcrumb hierarchy inheritance
+  const categoryParam = encodeURIComponent(product.category);
+  const brandParam = encodeURIComponent(product.brand);
+  const seriesParam = encodeURIComponent(product.series);
 
   return (
     <main className="min-h-screen bg-background p-4 sm:p-8 text-dark">
@@ -31,36 +37,44 @@ export default function ProductDetailPage({ params }: PageProps) {
         {/* Breadcrumb Hierarchy: Products > Category > Brand > Series > Item */}
         <div className="breadcrumbs mb-4 text-xs font-bold text-dark/60">
           <ul>
+            {/* 1. Reset all filters */}
             <li>
               <Link href="/products" className="hover:text-brand transition-colors">
                 Products
               </Link>
             </li>
+
+            {/* 2. Inherits: Category only */}
             <li>
               <Link
-                href={`/products?category=${encodeURIComponent(product.category)}`}
+                href={`/products?category=${categoryParam}`}
                 className="hover:text-brand transition-colors"
               >
                 {product.category}
               </Link>
             </li>
+
+            {/* 3. Inherits: Category + Brand */}
             <li>
               <Link
-                href={`/products?brand=${encodeURIComponent(product.brand)}`}
+                href={`/products?category=${categoryParam}&brand=${brandParam}`}
                 className="hover:text-brand transition-colors"
               >
                 {product.brand}
               </Link>
             </li>
+
+            {/* 4. Inherits: Category + Brand + Series */}
             <li>
               <Link
-                href={`/products?series=${encodeURIComponent(product.series)}`}
+                href={`/products?category=${categoryParam}&brand=${brandParam}&series=${seriesParam}`}
                 className="hover:text-brand transition-colors"
               >
                 {product.series}
               </Link>
             </li>
-            {/* 👈 Current Active Item */}
+
+            {/* 5. Current Active Item */}
             <li className="font-black text-dark">
               {product.name}
             </li>

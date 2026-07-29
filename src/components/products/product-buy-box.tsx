@@ -17,8 +17,23 @@ export default function ProductBuyBox({
   tag,
   preorderPeriod,
 }: BuyBoxProps) {
+  // #region MOCK STATE & HANDLERS (To be connected to Cart & Wishlist/Notification APIs)
   const [inWishlist, setInWishlist] = useState(false);
   const [added, setAdded] = useState(false);
+
+  const handleCartClick = async () => {
+    if (isOutOfStock) return;
+
+    // 🔌 BACKEND API INTEGRATION POINT (e.g. await addToCart({ productId }))
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleWishlistToggle = async () => {
+    // 🔌 BACKEND API INTEGRATION POINT (e.g. await toggleWishlist({ productId }))
+    setInWishlist((prev) => !prev);
+  };
+  // #endregion MOCK STATE & HANDLERS
 
   // Status Helper Flags
   const isOutOfStock =
@@ -26,12 +41,6 @@ export default function ProductBuyBox({
     status.toLowerCase().includes("sold out");
 
   const isPreOrder = status.toLowerCase().includes("pre-order");
-
-  const handleCartClick = () => {
-    if (isOutOfStock) return;
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  };
 
   // Status Text Color Formatting
   const getStatusColor = () => {
@@ -41,13 +50,13 @@ export default function ProductBuyBox({
   };
 
   return (
-    <div className="rounded-[2rem] bg-[#F4ECE1] p-6 shadow-xs border border-dark/10 space-y-5">
+    <div className="rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10 space-y-5">
       
       {/* Title & Tag */}
       <div className="space-y-2 text-right">
         <h1 className="text-xl font-black text-dark">{name}</h1>
         <div className="flex justify-end">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#EADCC9] px-3 py-1 text-[11px] font-bold text-dark">
+          <span className="inline-flex items-center gap-1 rounded-full bg-cream px-3 py-1 text-[11px] font-bold text-dark">
             {tag} <span className="cursor-pointer text-dark/50 hover:text-dark">×</span>
           </span>
         </div>
@@ -61,9 +70,9 @@ export default function ProductBuyBox({
         </p>
       </div>
 
-      {/* 📅 Pre-order Dates (Only renders if it's a pre-order and period is provided) */}
+      {/* 📅 Pre-order Period Banner */}
       {isPreOrder && preorderPeriod && (
-        <div className="rounded-2xl bg-[#EADCC9] p-3 text-center text-xs text-dark/80 border border-dark/5">
+        <div className="rounded-2xl bg-cream p-3 text-center text-xs text-dark/80 border border-dark/5">
           <p className="font-extrabold uppercase text-[10px] tracking-wider text-dark/60">
             Pre-order Period
           </p>
@@ -76,7 +85,7 @@ export default function ProductBuyBox({
       {/* Action Buttons */}
       <div className="space-y-2.5 pt-1">
         
-        {/* Main Cart Button - Disabled if Out of Stock */}
+        {/* Cart Button */}
         <button
           type="button"
           disabled={isOutOfStock}
@@ -84,7 +93,7 @@ export default function ProductBuyBox({
           className={`w-full rounded-full border py-3 text-xs font-extrabold transition-all shadow-xs ${
             isOutOfStock
               ? "border-dark/10 bg-dark/10 text-dark/40 cursor-not-allowed"
-              : "border-dark/30 bg-[#EADCC9] text-dark hover:bg-dark hover:text-white active:scale-95 cursor-pointer"
+              : "border-dark/30 bg-cream text-dark hover:bg-dark hover:text-white active:scale-95 cursor-pointer"
           }`}
         >
           {isOutOfStock
@@ -94,17 +103,23 @@ export default function ProductBuyBox({
             : "Add to Cart"}
         </button>
 
-        {/* Wishlist Button - ALWAYS ENABLED */}
+        {/* Wishlist / Restock Alert Button */}
         <button
           type="button"
-          onClick={() => setInWishlist(!inWishlist)}
+          onClick={handleWishlistToggle}
           className={`w-full rounded-full border border-dark/30 py-3 text-xs font-extrabold transition-all active:scale-95 shadow-xs ${
             inWishlist
               ? "bg-brand text-white border-brand"
-              : "bg-[#EADCC9] text-dark hover:bg-dark hover:text-white"
+              : "bg-cream text-dark hover:bg-dark hover:text-white"
           }`}
         >
-          {inWishlist ? "Saved to Wishlist ♥" : "Add to Wishlist"}
+          {inWishlist
+            ? isOutOfStock
+              ? "Saved! We'll notify you when back in stock 🔔"
+              : "Saved to Wishlist ♥"
+            : isOutOfStock
+            ? "Notify Me When Restocked 🔔"
+            : "Add to Wishlist"}
         </button>
       </div>
 
