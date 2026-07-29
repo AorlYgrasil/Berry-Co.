@@ -1,9 +1,7 @@
 export default function Footer() {
   return (
-   <footer className="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
-        <aside>
-            <p>Copyright © {new Date().getFullYear()} - All right reserved by Berry Co.</p>
-        </aside>
+    <footer className="w-full bg-[#383535] text-gray-200 py-5 text-center font-medium text-base">
+      Copyright © 2026 - All right reserved by Berry Co.
     </footer>
-  )
+  );
 }
