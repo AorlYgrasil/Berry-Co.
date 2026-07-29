@@ -124,10 +124,12 @@ export async function updateCartItemQuantity(owner: CartOwner, cartItemId: strin
   }
 
   if (quantity < 1) {
-    // Setting quantity to 0 is treated as removal — common UX pattern for
-    // the +/- steppers next to a cart line item.
     await db.cartItem.delete({ where: { id: cartItemId } });
     return null;
+  }
+
+  if (!item.product) {
+    throw Object.assign(new Error("PRODUCT_NOT_FOUND"), { status: 404 });
   }
 
   assertPurchasable(item.product, quantity);

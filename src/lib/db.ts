@@ -169,11 +169,19 @@ function withProduct<T extends { productId: string }>(row: T) {
 }
 
 // ============================================================
-// db — same call shape used by cart-service.ts / wishlist-service.ts
-// / checkout-service.ts, so those files don't need structural
-// changes right now.
+// dbMethods — the six data namespaces, pulled into their own const
+// so $transaction (below) can reference this object's type without
+// referencing `db` itself. That's the fix: `const db = { ...,
+// $transaction(fn: (tx: typeof db) => ...) }` is circular — TS needs
+// db's full type to resolve `typeof db`, but can't finish computing
+// db's type until it resolves that same reference. Because
+// `dbMethods` never mentions `db`, `typeof dbMethods` resolves
+// immediately, which is all $transaction's callback actually needs
+// (it only ever calls tx.cart / tx.product / tx.order / tx.cartItem
+// — never tx.$transaction, so nested transactions were never a case
+// this needed to support anyway).
 // ============================================================
-export const db = {
+const dbMethods = {
   product: {
     async findUnique({ where }: { where: { id: string } }): Promise<Product | null> {
       return clone(products.find((p) => p.id === where.id) ?? null);
@@ -405,6 +413,15 @@ export const db = {
       return order ? clone(order) : null;
     },
   },
+};
+
+// ============================================================
+// db — same call shape used by cart-service.ts / wishlist-service.ts
+// / checkout-service.ts, so those files don't need structural
+// changes right now.
+// ============================================================
+export const db = {
+  ...dbMethods,
 
   /**
    * Not a real transaction — just runs the callback against the same
@@ -413,7 +430,7 @@ export const db = {
    * function so checkout stays atomic (order create + stock decrement
    * + cart clear all succeed or all roll back together).
    */
-  async $transaction<T>(fn: (tx: typeof db) => Promise<T>): Promise<T> {
+  async $transaction<T>(fn: (tx: typeof dbMethods) => Promise<T>): Promise<T> {
     return fn(db);
   },
 };
