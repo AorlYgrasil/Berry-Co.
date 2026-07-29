@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
-import { createHmac, randomUUID } from "crypto";
-import { promisify } from "util";
+import { jwtVerify, SignJWT } from "jose";
+import { randomUUID } from "crypto";
 
 // ----------------------------------------------------------------------------
 // You already have src/lib/actions/auth.ts handling admin login. This file is
