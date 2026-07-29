@@ -6,21 +6,48 @@ import ItemCard from "@/components/item-card";
 import FilterDropdown from "@/components/filter-dropdown";
 import PriceRangeSlider from "@/components/price-range-slider";
 
+// 1. Added Category Options
+const categoryOptions = ["Cards", "Figurines", "Accessories"];
 const seriesOptions = ["Everyday", "Bestsellers", "Collector"];
-const availableTags = ["New", "Limited", "Popular", "Featured", "Exclusive"];
+const availableTags = ["New", "Limited", "Popular", "Featured", "Exclusive", "Pre-Order", "Sale"];
 const brandOptions = ["Deckdrop", "Studio", "Guest"];
 
-const dummyProducts = Array.from({ length: 16 }, (_, i) => ({
-  id: i + 1,
-  company: "Company Name",
-  name: "Item Name",
-  desc: "Short Description",
-  price: "₱120",
-  tags: ["New", "Limited"],
-}));
+// Varied mock products to thoroughly test filtering & tags
+const dummyProducts = Array.from({ length: 16 }, (_, i) => {
+  const categories = ["Cards", "Figurines", "Accessories"];
+  const brands = ["Deckdrop", "Studio", "Guest"];
+  const seriesList = ["Everyday", "Bestsellers", "Collector"];
+  const allTags = [
+    ["New", "Pre-Order", "Everyday"],
+    ["Limited", "Exclusive", "Collector"],
+    ["Popular", "Featured", "Bestsellers"],
+    ["Sale", "New", "Studio"],
+  ];
+
+  const category = categories[i % categories.length]; // 👈 Cycle through categories
+  const brand = brands[i % brands.length];
+  const series = seriesList[i % seriesList.length];
+  const tags = allTags[i % allTags.length];
+  const price = 500 + (i + 1) * 250;
+
+  return {
+    id: `item-${i + 1}`,
+    company: brand,
+    name: `${series} ${category.slice(0, -1)} ${String.fromCharCode(65 + (i % 6))}`,
+    desc: `Premium Edition ${category} #${i + 1}`,
+    price: `₱${price}`,
+    category: category, // 👈 Added category to item
+    tags: tags,
+  };
+});
 
 export default function ProductsPage() {
   const [query, setQuery] = useState("");
+  
+  // 2. Added Category States
+  const [categorySearch, setCategorySearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+
   const [seriesSearch, setSeriesSearch] = useState("");
   const [tagSearch, setTagSearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
@@ -29,8 +56,9 @@ export default function ProductsPage() {
   const [selectedBrand, setSelectedBrand] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState("0");
   const [maxPrice, setMaxPrice] = useState("");
-  const [priceValue, setPriceValue] = useState(250);
+  const [priceValue, setPriceValue] = useState(5000);
 
+  // 3. Updated Filtering Logic
   const filteredProducts = useMemo(() => {
     const min = Number(minPrice) || 0;
     const max = maxPrice === "" ? Infinity : Number(maxPrice) || Infinity;
@@ -38,22 +66,31 @@ export default function ProductsPage() {
     const selectedTagSet = new Set(selectedTags.map((tag) => tag.toLowerCase()));
 
     return dummyProducts.filter((item) => {
-      const label = `${item.company} ${item.name} ${item.desc}`.toLowerCase();
+      const label = `${item.company} ${item.name} ${item.desc} ${item.category}`.toLowerCase();
       const matchesQuery = queryLower === "" || label.includes(queryLower);
+      
+      // Category Match
+      const matchesCategory =
+        selectedCategory.length === 0 ||
+        selectedCategory.some((cat) => item.category.toLowerCase() === cat.toLowerCase());
+
       const matchesSeries =
         selectedSeries.length === 0 ||
         selectedSeries.some((series) => item.name.toLowerCase().includes(series.toLowerCase()));
+
       const matchesTags =
         selectedTags.length === 0 || item.tags.some((tag) => selectedTagSet.has(tag.toLowerCase()));
+
       const matchesBrand =
         selectedBrand.length === 0 ||
         selectedBrand.some((brand) => item.company.toLowerCase().includes(brand.toLowerCase()));
+
       const price = Number(item.price.toString().replace(/[^0-9.]/g, "")) || 0;
       const matchesPrice = price >= min && price <= max;
 
-      return matchesQuery && matchesSeries && matchesTags && matchesBrand && matchesPrice;
+      return matchesQuery && matchesCategory && matchesSeries && matchesTags && matchesBrand && matchesPrice;
     });
-  }, [query, selectedSeries, selectedTags, selectedBrand, minPrice, maxPrice]);
+  }, [query, selectedCategory, selectedSeries, selectedTags, selectedBrand, minPrice, maxPrice]);
 
   const addTag = (tag: string) => {
     if (tag && !selectedTags.includes(tag)) {
@@ -63,6 +100,10 @@ export default function ProductsPage() {
 
   const removeTag = (tag: string) => {
     setSelectedTags((current) => current.filter((value) => value !== tag));
+  };
+
+  const removeCategory = (cat: string) => {
+    setSelectedCategory((current) => current.filter((value) => value !== cat));
   };
 
   const removeSeries = (series: string) => {
@@ -75,12 +116,17 @@ export default function ProductsPage() {
 
   const resetFilters = () => {
     setQuery("");
+    setCategorySearch("");
     setSeriesSearch("");
     setTagSearch("");
     setBrandSearch("");
+    setSelectedCategory([]); // 👈 Clear categories on reset
     setSelectedSeries([]);
     setSelectedBrand([]);
     setSelectedTags([]);
+    setMinPrice("0");
+    setMaxPrice("");
+    setPriceValue(5000);
   };
 
   return (
@@ -95,6 +141,20 @@ export default function ProductsPage() {
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
+                  {/* Category Active Badges */}
+                  {selectedCategory.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => removeCategory(cat)}
+                      className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark"
+                    >
+                      {cat}
+                      <span className="text-brand">×</span>
+                    </button>
+                  ))}
+
+                  {/* Series Active Badges */}
                   {selectedSeries.map((series) => (
                     <button
                       key={series}
@@ -107,6 +167,7 @@ export default function ProductsPage() {
                     </button>
                   ))}
 
+                  {/* Brand Active Badges */}
                   {selectedBrand.map((brand) => (
                     <button
                       key={brand}
@@ -119,6 +180,7 @@ export default function ProductsPage() {
                     </button>
                   ))}
 
+                  {/* Tag Active Badges */}
                   {selectedTags.map((tag) => (
                     <button
                       key={tag}
@@ -131,7 +193,8 @@ export default function ProductsPage() {
                     </button>
                   ))}
 
-                  {selectedSeries.length === 0 &&
+                  {selectedCategory.length === 0 &&
+                    selectedSeries.length === 0 &&
                     selectedBrand.length === 0 &&
                     selectedTags.length === 0 && (
                       <span className="text-sm font-semibold text-dark/70">
@@ -148,7 +211,7 @@ export default function ProductsPage() {
               <button
                 type="button"
                 onClick={resetFilters}
-                className="rounded-full border border-dark/10 bg-cream px-4 py-2 text-sm font-semibold text-brand"
+                className="rounded-full border border-dark/10 bg-cream px-4 py-2 text-sm font-semibold text-brand hover:bg-cream/80 transition-colors"
               >
                 Reset
               </button>
@@ -164,6 +227,7 @@ export default function ProductsPage() {
                     name: item.name,
                     description: item.desc,
                     price: item.price,
+                    tags: item.tags,
                   }}
                 />
               ))}
@@ -176,6 +240,17 @@ export default function ProductsPage() {
             </h2>
 
             <div className="space-y-4">
+              {/* 📦 4. CATEGORIES FILTER DROPDOWN (Added here!) */}
+              <FilterDropdown
+                label="Category"
+                options={categoryOptions}
+                searchValue={categorySearch}
+                selectedValues={selectedCategory}
+                onSearchChange={setCategorySearch}
+                onSelectChange={setSelectedCategory}
+              />
+
+              {/* Series Filter */}
               <FilterDropdown
                 label="Series"
                 options={seriesOptions}
@@ -227,7 +302,7 @@ export default function ProductsPage() {
                       setTagSearch("");
                     }
                   }}
-                  className="mt-3 w-full rounded-full border border-dark/40 bg-white px-3 py-2 text-sm font-semibold text-dark outline-none"
+                  className="mt-3 w-full rounded-full border border-dark/40 bg-white px-3 py-2 text-sm font-semibold text-dark outline-none cursor-pointer"
                 >
                   <option value="">Add a tag</option>
                   {availableTags
@@ -249,7 +324,7 @@ export default function ProductsPage() {
                       key={tag}
                       type="button"
                       onClick={() => removeTag(tag)}
-                      className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs font-bold text-white"
+                      className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs font-bold text-white shadow-xs"
                     >
                       {tag}
                       <span className="text-white">×</span>
@@ -258,6 +333,7 @@ export default function ProductsPage() {
                 </div>
               </div>
 
+              {/* Brand Filter */}
               <FilterDropdown
                 label="Brand"
                 options={brandOptions}
@@ -267,6 +343,7 @@ export default function ProductsPage() {
                 onSelectChange={setSelectedBrand}
               />
 
+              {/* Availability Filter */}
               <div className="space-y-2 text-xs font-semibold text-dark">
                 <p className="text-right font-bold">Availability</p>
                 <div className="flex flex-wrap justify-end gap-3">
@@ -294,6 +371,7 @@ export default function ProductsPage() {
                 </div>
               </div>
 
+              {/* Price Range Slider */}
               <PriceRangeSlider
                 minValue={minPrice}
                 maxValue={maxPrice}

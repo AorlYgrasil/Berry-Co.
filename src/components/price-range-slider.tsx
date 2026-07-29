@@ -45,7 +45,7 @@ export default function PriceRangeSlider({
 
       <div className="flex items-center gap-2 pt-1">
         <div className="flex-1 space-y-1">
-          <label className="text-[10px] font-bold text-dark/70">Min ($)</label>
+          <label className="text-[10px] font-bold text-dark/70">Min (₱)</label>
           <input
             type="number"
             value={minValue}
@@ -58,7 +58,7 @@ export default function PriceRangeSlider({
         <span className="pt-4 text-xs font-bold text-dark">-</span>
 
         <div className="flex-1 space-y-1">
-          <label className="text-[10px] font-bold text-dark/70">Max ($)</label>
+          <label className="text-[10px] font-bold text-dark/70">Max (₱)</label>
           <input
             type="number"
             value={maxValue}
