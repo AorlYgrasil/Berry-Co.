@@ -59,6 +59,16 @@ function ProductsContent() {
   const [maxPrice, setMaxPrice] = useState("");
   const [priceValue, setPriceValue] = useState(5000);
 
+  // 📱 Mobile Filter Drawer State
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  // Calculate active filter count for the mobile button badge
+  const activeFilterCount =
+    selectedCategory.length +
+    selectedSeries.length +
+    selectedBrand.length +
+    selectedTags.length;
+
   // 🔗 Automatically parse URL Query Params (e.g., from Breadcrumb Clicks)
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -156,113 +166,52 @@ function ProductsContent() {
   };
 
   return (
-    <div className="page-container">
-      <div className="w-full max-w-md">
-        <SearchBar value={query} onChange={setQuery} />
+    <div className="page-container space-y-6">
+      
+      {/* 🔍 Top Bar: Search + Mobile Filter Toggle */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 w-full">
+        <div className="w-full max-w-md">
+          <SearchBar value={query} onChange={setQuery} />
+        </div>
+
+        {/* 📱 Mobile Toggle Button (Visible only below xl screen size) */}
+        <button
+          type="button"
+          onClick={() => setIsMobileFilterOpen((prev) => !prev)}
+          className="xl:hidden flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-full bg-brand text-white font-extrabold text-xs shadow-md hover:bg-brand/90 active:scale-95 transition-all cursor-pointer"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          <span>{isMobileFilterOpen ? "Hide Filters" : "Filters & Sorting"}</span>
+          {activeFilterCount > 0 && (
+            <span className="bg-white text-brand rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black shadow-xs">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
       </div>
 
-      <div className="flex flex-col gap-6 xl:flex-row">
-        <section className="content-panel">
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Category Active Badges */}
-                {selectedCategory.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => removeCategory(cat)}
-                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
-                  >
-                    {cat}
-                    <span>×</span>
-                  </button>
-                ))}
-
-                {/* Series Active Badges */}
-                {selectedSeries.map((series) => (
-                  <button
-                    key={series}
-                    type="button"
-                    onClick={() => removeSeries(series)}
-                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
-                  >
-                    {series}
-                    <span>×</span>
-                  </button>
-                ))}
-
-                {/* Brand Active Badges */}
-                {selectedBrand.map((brand) => (
-                  <button
-                    key={brand}
-                    type="button"
-                    onClick={() => removeBrand(brand)}
-                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
-                  >
-                    {brand}
-                    <span>×</span>
-                  </button>
-                ))}
-
-                {/* Tag Active Badges */}
-                {selectedTags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
-                  >
-                    {tag}
-                    <span>×</span>
-                  </button>
-                ))}
-
-                {selectedCategory.length === 0 &&
-                  selectedSeries.length === 0 &&
-                  selectedBrand.length === 0 &&
-                  selectedTags.length === 0 && (
-                    <span className="text-sm font-semibold text-dark/70">
-                      No filters selected
-                    </span>
-                  )}
-              </div>
-
-              <h1 className="text-2xl font-black text-dark">
-                Results for: {query || "All products"}
-              </h1>
-            </div>
-
+      <div className="flex flex-col xl:flex-row gap-6">
+        
+        {/* 🎛️ Filter Panel (Top on Mobile when toggled, Right sidebar on Desktop) */}
+        <aside
+          className={`sidebar-panel xl:w-80 xl:order-2 xl:block ${
+            isMobileFilterOpen ? "block" : "hidden"
+          }`}
+        >
+          <div className="flex items-center justify-between mb-4 xl:justify-center">
+            <h2 className="text-base font-extrabold text-dark leading-tight">
+              Set Search Filters and Tags
+            </h2>
             <button
               type="button"
-              onClick={resetFilters}
-              className="rounded-full border border-dark/10 bg-cream px-4 py-2 text-sm font-semibold text-brand hover:bg-cream/80 transition-colors cursor-pointer"
+              onClick={() => setIsMobileFilterOpen(false)}
+              className="xl:hidden text-xs font-bold text-dark/50 hover:text-dark px-2 py-1"
             >
-              Reset
+              ✕ Close
             </button>
           </div>
-
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredProducts.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={{
-                  id: item.id,
-                  company: item.company,
-                  name: item.name,
-                  description: item.desc,
-                  price: item.price,
-                  tags: item.tags,
-                }}
-              />
-            ))}
-          </div>
-        </section>
-
-        <aside className="sidebar-panel">
-          <h2 className="mb-6 text-center text-base font-extrabold text-dark leading-tight">
-            Set Search Filters and Tags
-          </h2>
 
           <div className="space-y-4">
             {/* Category Dropdown */}
@@ -406,8 +355,116 @@ function ProductsContent() {
               onMaxChange={setMaxPrice}
               onSliderChange={setPriceValue}
             />
+
+            {/* Mobile Apply Button */}
+            <button
+              type="button"
+              onClick={() => setIsMobileFilterOpen(false)}
+              className="xl:hidden w-full py-3 mt-4 rounded-full bg-brand text-white font-extrabold text-xs shadow-md"
+            >
+              Apply & View {filteredProducts.length} Results
+            </button>
           </div>
         </aside>
+
+        {/* 📦 Product Grid Panel */}
+        <section className="content-panel flex-1 xl:order-1">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Category Active Badges */}
+                {selectedCategory.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => removeCategory(cat)}
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
+                  >
+                    {cat}
+                    <span>×</span>
+                  </button>
+                ))}
+
+                {/* Series Active Badges */}
+                {selectedSeries.map((series) => (
+                  <button
+                    key={series}
+                    type="button"
+                    onClick={() => removeSeries(series)}
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
+                  >
+                    {series}
+                    <span>×</span>
+                  </button>
+                ))}
+
+                {/* Brand Active Badges */}
+                {selectedBrand.map((brand) => (
+                  <button
+                    key={brand}
+                    type="button"
+                    onClick={() => removeBrand(brand)}
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
+                  >
+                    {brand}
+                    <span>×</span>
+                  </button>
+                ))}
+
+                {/* Tag Active Badges */}
+                {selectedTags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
+                  >
+                    {tag}
+                    <span>×</span>
+                  </button>
+                ))}
+
+                {selectedCategory.length === 0 &&
+                  selectedSeries.length === 0 &&
+                  selectedBrand.length === 0 &&
+                  selectedTags.length === 0 && (
+                    <span className="text-sm font-semibold text-dark/70">
+                      No filters selected
+                    </span>
+                  )}
+              </div>
+
+              <h1 className="text-2xl font-black text-dark">
+                Results for: {query || "All products"} ({filteredProducts.length})
+              </h1>
+            </div>
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="rounded-full border border-dark/10 bg-cream px-4 py-2 text-sm font-semibold text-brand hover:bg-cream/80 transition-colors cursor-pointer self-start sm:self-auto"
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProducts.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={{
+                  id: item.id,
+                  company: item.company,
+                  name: item.name,
+                  description: item.desc,
+                  price: item.price,
+                  tags: item.tags,
+                }}
+              />
+            ))}
+          </div>
+        </section>
+
       </div>
     </div>
   );
