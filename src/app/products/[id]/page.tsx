@@ -20,15 +20,10 @@ export default function ProductDetailPage({ params }: PageProps) {
     series: "Pokemon",       // Series
     price: "₱120",
     status: "Pre-orders Open",
-    tag: "Tag name",
+    tag: "Pokemon",
     preorderPeriod: "2026/04/28 ~ 2026/06/10 (JST)",
   };
   // #endregion MOCK DATA
-
-  // Encoded URL parameter strings for breadcrumb hierarchy inheritance
-  const categoryParam = encodeURIComponent(product.category);
-  const brandParam = encodeURIComponent(product.brand);
-  const seriesParam = encodeURIComponent(product.series);
 
   return (
     <main className="min-h-screen bg-background p-4 sm:p-8 text-dark">
@@ -37,44 +32,36 @@ export default function ProductDetailPage({ params }: PageProps) {
         {/* Breadcrumb Hierarchy: Products > Category > Brand > Series > Item */}
         <div className="breadcrumbs mb-4 text-xs font-bold text-dark/60">
           <ul>
-            {/* 1. Reset all filters */}
             <li>
               <Link href="/products" className="hover:text-brand transition-colors">
                 Products
               </Link>
             </li>
-
-            {/* 2. Inherits: Category only */}
             <li>
               <Link
-                href={`/products?category=${categoryParam}`}
+                href={`/products?category=${encodeURIComponent(product.category)}`}
                 className="hover:text-brand transition-colors"
               >
                 {product.category}
               </Link>
             </li>
-
-            {/* 3. Inherits: Category + Brand */}
             <li>
               <Link
-                href={`/products?category=${categoryParam}&brand=${brandParam}`}
+                href={`/products?brand=${encodeURIComponent(product.brand)}`}
                 className="hover:text-brand transition-colors"
               >
                 {product.brand}
               </Link>
             </li>
-
-            {/* 4. Inherits: Category + Brand + Series */}
             <li>
               <Link
-                href={`/products?category=${categoryParam}&brand=${brandParam}&series=${seriesParam}`}
+                href={`/products?series=${encodeURIComponent(product.series)}`}
                 className="hover:text-brand transition-colors"
               >
                 {product.series}
               </Link>
             </li>
-
-            {/* 5. Current Active Item */}
+            {/* Current Active Item */}
             <li className="font-black text-dark">
               {product.name}
             </li>
@@ -84,14 +71,13 @@ export default function ProductDetailPage({ params }: PageProps) {
         {/* Main Grid Content */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
           
-          {/* Left Side: Photo + Accordions Container */}
-          <div className="lg:col-span-8 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10 space-y-6">
+          {/* 1️⃣ Photo Gallery Card (Mobile: 1st | Desktop: Top-Left) */}
+          <div className="lg:col-span-8 lg:col-start-1 lg:row-start-1 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10">
             <ProductGallery />
-            <ProductAccordions />
           </div>
 
-          {/* Right Side: Sticky Buy Box Panel */}
-          <div className="lg:col-span-4 sticky top-6 sm:top-24">
+          {/* 2️⃣ Sticky Buy Box Panel (Mobile: 2nd | Desktop: Top-Right) */}
+          <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24">
             <ProductBuyBox
               name={product.name}
               price={product.price}
@@ -99,6 +85,11 @@ export default function ProductDetailPage({ params }: PageProps) {
               tag={product.tag}
               preorderPeriod={product.preorderPeriod}
             />
+          </div>
+
+          {/* 3️⃣ Accordions Card (Mobile: 3rd | Desktop: Bottom-Left) */}
+          <div className="lg:col-span-8 lg:col-start-1 lg:row-start-2 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10">
+            <ProductAccordions />
           </div>
 
         </div>
