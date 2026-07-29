@@ -8,7 +8,7 @@ import PriceRangeSlider from "@/components/price-range-slider";
 
 // 1. Added Category Options
 const categoryOptions = ["Cards", "Figurines", "Accessories"];
-const seriesOptions = ["Everyday", "Bestsellers", "Collector"];
+const seriesOptions = ["Pokemon", "Magic The Gathering", "Yu-Gi-Oh"];
 const availableTags = ["New", "Limited", "Popular", "Featured", "Exclusive", "Pre-Order", "Sale"];
 const brandOptions = ["Deckdrop", "Studio", "Guest"];
 
@@ -16,11 +16,11 @@ const brandOptions = ["Deckdrop", "Studio", "Guest"];
 const dummyProducts = Array.from({ length: 16 }, (_, i) => {
   const categories = ["Cards", "Figurines", "Accessories"];
   const brands = ["Deckdrop", "Studio", "Guest"];
-  const seriesList = ["Everyday", "Bestsellers", "Collector"];
+  const seriesList = ["Pokemon", "Magic The Gathering", "Yu-Gi-Oh"];
   const allTags = [
-    ["New", "Pre-Order", "Everyday"],
-    ["Limited", "Exclusive", "Collector"],
-    ["Popular", "Featured", "Bestsellers"],
+    ["New", "Pre-Order", "Pokemon"],
+    ["Limited", "Exclusive", "Magic The Gathering"],
+    ["Popular", "Featured", "Yu-Gi-Oh"],
     ["Sale", "New", "Studio"],
   ];
 
