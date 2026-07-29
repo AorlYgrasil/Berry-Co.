@@ -7,13 +7,12 @@ import ItemCard from "@/components/item-card";
 import FilterDropdown from "@/components/filter-dropdown";
 import PriceRangeSlider from "@/components/price-range-slider";
 
-// #region MOCK DATA & FILTER OPTIONS (To be replaced with database queries or API fetches)
+// #region MOCK DATA & FILTER OPTIONS
 const categoryOptions = ["Cards", "Figurines", "Accessories"];
 const seriesOptions = ["Pokemon", "Magic The Gathering", "Yu-Gi-Oh"];
 const availableTags = ["New", "Limited", "Popular", "Featured", "Exclusive", "Pre-Order", "Sale"];
 const brandOptions = ["Deckdrop", "Studio", "Guest"];
 
-// Varied mock products to thoroughly test filtering & tags
 const dummyProducts = Array.from({ length: 16 }, (_, i) => {
   const categories = ["Cards", "Figurines", "Accessories"];
   const brands = ["Deckdrop", "Studio", "Guest"];
@@ -62,14 +61,14 @@ function ProductsContent() {
   // 📱 Mobile Filter Drawer State
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Calculate active filter count for the mobile button badge
+  // Calculate active filter count for mobile badge
   const activeFilterCount =
     selectedCategory.length +
     selectedSeries.length +
     selectedBrand.length +
     selectedTags.length;
 
-  // 🔗 Automatically parse URL Query Params (e.g., from Breadcrumb Clicks)
+  // 🔗 URL Query Params parsing
   useEffect(() => {
     const categoryParam = searchParams.get("category");
     const brandParam = searchParams.get("brand");
@@ -77,24 +76,14 @@ function ProductsContent() {
     const tagParam = searchParams.get("tag");
     const searchParam = searchParams.get("search") || searchParams.get("query");
 
-    if (categoryParam) {
-      setSelectedCategory([categoryParam]);
-    }
-    if (brandParam) {
-      setSelectedBrand([brandParam]);
-    }
-    if (seriesParam) {
-      setSelectedSeries([seriesParam]);
-    }
-    if (tagParam) {
-      setSelectedTags([tagParam]);
-    }
-    if (searchParam) {
-      setQuery(searchParam);
-    }
+    if (categoryParam) setSelectedCategory([categoryParam]);
+    if (brandParam) setSelectedBrand([brandParam]);
+    if (seriesParam) setSelectedSeries([seriesParam]);
+    if (tagParam) setSelectedTags([tagParam]);
+    if (searchParam) setQuery(searchParam);
   }, [searchParams]);
 
-  // #region FRONTEND FILTERING LOGIC (Can be kept client-side or moved to server-side query params)
+  // Frontend Filtering Logic
   const filteredProducts = useMemo(() => {
     const min = Number(minPrice) || 0;
     const max = maxPrice === "" ? Infinity : Number(maxPrice) || Infinity;
@@ -126,13 +115,6 @@ function ProductsContent() {
       return matchesQuery && matchesCategory && matchesSeries && matchesTags && matchesPrice;
     });
   }, [query, selectedCategory, selectedSeries, selectedTags, selectedBrand, minPrice, maxPrice]);
-  // #endregion FRONTEND FILTERING LOGIC
-
-  const addTag = (tag: string) => {
-    if (tag && !selectedTags.includes(tag)) {
-      setSelectedTags((current) => [...current, tag]);
-    }
-  };
 
   const removeTag = (tag: string) => {
     setSelectedTags((current) => current.filter((value) => value !== tag));
@@ -174,7 +156,7 @@ function ProductsContent() {
           <SearchBar value={query} onChange={setQuery} />
         </div>
 
-        {/* 📱 Mobile Toggle Button (Visible only below xl screen size) */}
+        {/* 📱 Mobile Toggle Button */}
         <button
           type="button"
           onClick={() => setIsMobileFilterOpen((prev) => !prev)}
@@ -194,7 +176,7 @@ function ProductsContent() {
 
       <div className="flex flex-col xl:flex-row gap-6">
         
-        {/* 🎛️ Filter Panel (Top on Mobile when toggled, Right sidebar on Desktop) */}
+        {/* 🎛️ Sidebar Filter Panel */}
         <aside
           className={`sidebar-panel xl:w-80 xl:order-2 xl:block ${
             isMobileFilterOpen ? "block" : "hidden"
@@ -214,7 +196,7 @@ function ProductsContent() {
           </div>
 
           <div className="space-y-4">
-            {/* Category Dropdown */}
+            {/* 1️⃣ Category Filter */}
             <FilterDropdown
               label="Category"
               options={categoryOptions}
@@ -224,7 +206,7 @@ function ProductsContent() {
               onSelectChange={setSelectedCategory}
             />
 
-            {/* Series Filter */}
+            {/* 2️⃣ Series Filter */}
             <FilterDropdown
               label="Series"
               options={seriesOptions}
@@ -234,80 +216,17 @@ function ProductsContent() {
               onSelectChange={setSelectedSeries}
             />
 
-            {/* Tags Filter */}
-            <div className="rounded-2xl border border-dark/10 bg-cream p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-dark/80">
-                  Tags
-                </p>
-                <span className="text-[11px] text-dark/70">
-                  {selectedTags.length} selected
-                </span>
-              </div>
+            {/* 3️⃣ Tags Filter */}
+            <FilterDropdown
+              label="Tags"
+              options={availableTags}
+              searchValue={tagSearch}
+              selectedValues={selectedTags}
+              onSearchChange={setTagSearch}
+              onSelectChange={setSelectedTags}
+            />
 
-              <div className="flex items-center gap-2 rounded-full border border-dark/40 bg-white px-3 py-2">
-                <svg
-                  className="h-3.5 w-3.5 text-dark"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.5}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <input
-                  type="text"
-                  value={tagSearch}
-                  onChange={(event) => setTagSearch(event.target.value)}
-                  placeholder="Search tags"
-                  className="w-full bg-transparent text-xs text-dark outline-none"
-                />
-              </div>
-
-              <select
-                value=""
-                onChange={(event) => {
-                  if (event.target.value) {
-                    addTag(event.target.value);
-                    setTagSearch("");
-                  }
-                }}
-                className="mt-3 w-full rounded-full border border-dark/40 bg-white px-3 py-2 text-sm font-semibold text-dark outline-none cursor-pointer"
-              >
-                <option value="">Add a tag</option>
-                {availableTags
-                  .filter(
-                    (tag) =>
-                      !selectedTags.includes(tag) &&
-                      tag.toLowerCase().includes(tagSearch.toLowerCase())
-                  )
-                  .map((tag) => (
-                    <option key={tag} value={tag}>
-                      {tag}
-                    </option>
-                  ))}
-              </select>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {selectedTags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs font-bold text-white shadow-xs cursor-pointer"
-                  >
-                    {tag}
-                    <span>×</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Brand Filter */}
+            {/* 4️⃣ Brand Filter */}
             <FilterDropdown
               label="Brand"
               options={brandOptions}
@@ -317,7 +236,7 @@ function ProductsContent() {
               onSelectChange={setSelectedBrand}
             />
 
-            {/* #region UNBOUND BACKEND CONTROLS (Static Checkboxes needing backend state binding) */}
+            {/* Availability Checkboxes */}
             <div className="space-y-2 text-xs font-semibold text-dark">
               <p className="text-right font-bold">Availability</p>
               <div className="flex flex-wrap justify-end gap-3">
@@ -344,7 +263,6 @@ function ProductsContent() {
                 </label>
               </div>
             </div>
-            {/* #endregion UNBOUND BACKEND CONTROLS */}
 
             {/* Price Range Slider */}
             <PriceRangeSlider
@@ -372,7 +290,6 @@ function ProductsContent() {
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                {/* Category Active Badges */}
                 {selectedCategory.map((cat) => (
                   <button
                     key={cat}
@@ -385,7 +302,6 @@ function ProductsContent() {
                   </button>
                 ))}
 
-                {/* Series Active Badges */}
                 {selectedSeries.map((series) => (
                   <button
                     key={series}
@@ -398,7 +314,6 @@ function ProductsContent() {
                   </button>
                 ))}
 
-                {/* Brand Active Badges */}
                 {selectedBrand.map((brand) => (
                   <button
                     key={brand}
@@ -411,7 +326,6 @@ function ProductsContent() {
                   </button>
                 ))}
 
-                {/* Tag Active Badges */}
                 {selectedTags.map((tag) => (
                   <button
                     key={tag}
