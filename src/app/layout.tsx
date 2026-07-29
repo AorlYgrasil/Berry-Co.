@@ -10,7 +10,9 @@ export default function RootLayout({
 
     return(
         <html lang="en">
-            <body>
+            
+                <body className="min-h-screen flex flex-col bg-[#EAD0AA] text-[#35322E]">
+
                 <Navbar />
 
                 <main>{children}</main>
