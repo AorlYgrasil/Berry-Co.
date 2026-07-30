@@ -34,17 +34,17 @@ export default function CartPage() {
 
   return (
     <main className="max-w-7xl w-full mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-black text-[#35322E]">Your Shopping Cart</h1>
+      <h1 className="text-3xl font-black text-dark">Your Shopping Cart</h1>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Cart Items Section */}
-        <div className="flex-1 bg-[#FBF4E4] rounded-3xl p-6 shadow-sm border border-[#35322E]/10 w-full space-y-4">
+        <div className="flex-1 bg-highlights rounded-3xl p-6 shadow-sm border border-dark/10 w-full space-y-4">
           {cart.length === 0 ? (
             <div className="text-center py-12 space-y-4">
-              <p className="text-sm font-semibold text-[#35322E]/70">Your cart is empty.</p>
+              <p className="text-sm font-semibold text-dark/70">Your cart is empty.</p>
               <Link
                 href="/products"
-                className="inline-block bg-[#E23B2E] hover:bg-[#B82A20] text-white font-bold px-6 py-2.5 rounded-full text-xs transition shadow-sm"
+                className="inline-block bg-brand hover:bg-brand-dark text-white font-bold px-6 py-2.5 rounded-full text-xs transition shadow-sm"
               >
                 Explore Products
               </Link>
@@ -53,21 +53,21 @@ export default function CartPage() {
             cart.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between bg-[#F3E4C8]/50 border border-[#35322E]/10 rounded-2xl p-4 gap-4"
+                className="flex items-center justify-between bg-[#F3E4C8]/50 border border-dark/10 rounded-2xl p-4 gap-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-[#F3E4C8] rounded-xl flex items-center justify-center text-[10px] text-[#35322E]/60 font-bold">
+                  <div className="w-16 h-16 bg-[#F3E4C8] rounded-xl flex items-center justify-center text-[10px] text-dark/60 font-bold">
                     Image
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-[#35322E]">{item.name}</h3>
-                    <p className="text-xs text-[#35322E]/70">{item.category}</p>
-                    <p className="font-extrabold text-sm text-[#35322E] mt-1">${item.price}</p>
+                    <h3 className="font-bold text-sm text-dark">{item.name}</h3>
+                    <p className="text-xs text-dark/70">{item.category}</p>
+                    <p className="font-extrabold text-sm text-dark mt-1">${item.price}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center bg-[#FBF4E4] border border-[#35322E]/20 rounded-full px-3 py-1 gap-3 text-xs font-bold">
+                  <div className="flex items-center bg-highlights border border-dark/20 rounded-full px-3 py-1 gap-3 text-xs font-bold">
                     <button onClick={() => updateQuantity(item.id, -1)} className="hover:text-[#E23B2E]">
                       -
                     </button>
@@ -78,7 +78,7 @@ export default function CartPage() {
                   </div>
                   <button
                     onClick={() => removeFromCart(item.id)}
-                    className="text-xs text-[#E23B2E] font-bold hover:underline"
+                    className="text-xs text-brand font-bold hover:underline"
                   >
                     Remove
                   </button>
@@ -89,23 +89,23 @@ export default function CartPage() {
         </div>
 
         {/* Order Summary Sidebar */}
-        <aside className="w-full lg:w-80 bg-[#FBF4E4] rounded-3xl p-6 shadow-sm border border-[#35322E]/10 space-y-4">
-          <h2 className="text-lg font-bold text-[#35322E] border-b border-[#35322E]/10 pb-2">
+        <aside className="w-full lg:w-80 bg-highlights rounded-3xl p-6 shadow-sm border border-dark/10 space-y-4">
+          <h2 className="text-lg font-bold text-dark border-b border-dark/10 pb-2">
             Order Summary
           </h2>
 
-          <div className="space-y-2 text-xs font-medium text-[#35322E]/80">
+          <div className="space-y-2 text-xs font-medium text-dark/80">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>${subtotal}</span>
+              <span>₱{subtotal}</span>
             </div>
             <div className="flex justify-between">
               <span>Estimated Shipping</span>
-              <span>${shipping}</span>
+              <span>₱{shipping}</span>
             </div>
-            <div className="flex justify-between font-bold text-sm text-[#35322E] pt-2 border-t border-[#35322E]/10">
+            <div className="flex justify-between font-bold text-sm text-dark pt-2 border-t border-dark/10">
               <span>Total</span>
-              <span>${total}</span>
+              <span>₱{total}</span>
             </div>
           </div>
 
@@ -113,7 +113,7 @@ export default function CartPage() {
             href={cart.length > 0 ? '/checkout' : '#'}
             className={`w-full block text-center font-bold py-3 rounded-full text-xs transition ${
               cart.length > 0
-                ? 'bg-[#E23B2E] hover:bg-[#B82A20] text-white shadow-sm'
+                ? 'bg-[#E23B2E] hover:bg-brand-dark text-white shadow-sm'
                 : 'bg-stone-300 text-stone-500 cursor-not-allowed'
             }`}
           >
