@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getCategories } from '@/lib/data/data-products'
-import type { Category, Product, ProductStatus, ProductWithCategory } from '@/types/database'
+import type { Product, ProductStatus, ProductWithCategory } from '@/types/database'
 
 export interface InventorySummary {
   totalProducts: number
@@ -29,7 +29,11 @@ export async function getInventory(
   if (error || !data) return []
 
   const categoriesById = new Map(categories.map((c) => [c.id, c]))
-  let products = (data as Product[]).map((p) => toProductWithCategory(p, categoriesById))
+  // toProductWithCategory isn't exported from data-products; do simple local mapping
+  let products = (data as Product[]).map((p) => {
+    const category = categoriesById.get((p as any).category_id) ?? null
+    return { ...(p as any), category } as unknown as ProductWithCategory
+  })
 
   if (status) products = products.filter((p) => p.status === status)
 
@@ -72,8 +76,4 @@ export async function getInventorySummary(): Promise<InventorySummary> {
     lowStockCount,
     outOfStockCount,
   }
-}
-
-function toProductWithCategory(p: Product, categoriesById: Map<string, Category>): any {
-    throw new Error('Function not implemented.')
 }

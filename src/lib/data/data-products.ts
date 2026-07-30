@@ -12,6 +12,7 @@ export function deriveProductStatus(stock: number, lowStockThreshold: number): P
   return 'active'
 }
 
+
 function toProductWithCategory(
   product: Product,
   categoriesById: Map<string, Category>
