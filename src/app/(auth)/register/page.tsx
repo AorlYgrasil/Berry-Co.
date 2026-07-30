@@ -27,7 +27,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // Register with Supabase and pass Full Name into metadata
+    // Register with Supabase and let the backend create the profile row.
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
