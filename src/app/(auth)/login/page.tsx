@@ -28,7 +28,7 @@ export default function LoginPage() {
       setErrorMsg(error.message);
       setLoading(false);
     } else {
-      router.push('/products');
+      router.push('/page');
       router.refresh();
     }
   };

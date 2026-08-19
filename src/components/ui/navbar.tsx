@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <header className="w-full bg-highlights border-b border-dark/10 py-4 px-6 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -14,9 +20,15 @@ export default function Navbar() {
           <Link href="/cart" className="hover:text-brand transition">
             Cart
           </Link>
-          <Link href="/login" className="hover:text-brand transition">
-            Login/Sign up
-          </Link>
+          {user ? (
+            <Link href="/page" className="hover:text-brand transition">
+              Profile
+            </Link>
+          ) : (
+            <Link href="/login" className="hover:text-brand transition">
+              Login/Sign up
+            </Link>
+          )}
         </nav>
       </div>
     </header>

@@ -45,7 +45,7 @@ export default function RegisterPage() {
     }
 
     alert('Account created successfully! Welcome to Deckdrop.');
-    router.push('/products');
+    router.push('/page');
     router.refresh();
   };
 

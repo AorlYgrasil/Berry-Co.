@@ -1,67 +1,25 @@
 'use server'
 
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Profile } from '@/types/database'
 
 export type LoginState = {
   error: string | null
 }
 
-const SESSION_COOKIE = 'berryco_admin_session'
+const ADMIN_ROLES = ['super_admin', 'admin', 'staff'] as const
 
 /**
- * ⚠️ TEMPORARY DEV-ONLY AUTH ⚠️
- * No Supabase Auth or database required — just a hardcoded credential list
- * and a cookie. This exists so you can build out the dashboard before your
- * database is wired up. Same function names/signatures as the real version
- * (loginAdmin, logoutAdmin, getCurrentAdmin), so swapping back later is a
- * drop-in replacement — nothing else in the app needs to change.
+ * Real Supabase Auth login. Replaces the old hardcoded dev-only version —
+ * same function name/signature, so no other file needs to change.
  *
- * Dev logins:
- *   superadmin@berryco.com / password123   (role: super_admin)
- *   admin@berryco.com      / password123   (role: admin)
- *   staff@berryco.com      / password123   (role: staff)
+ * Signs the admin in via Supabase Auth (sets the real session cookie via
+ * the server client), then checks that their `profiles.role` is one of
+ * super_admin/admin/staff. If not, we sign them back out immediately so a
+ * plain customer account can never reach /admin.
  */
-const DEV_ADMINS: Record<string, { password: string; profile: Profile }> = {
-  'superadmin@berryco.com': {
-    password: 'password123',
-    profile: {
-      id: 'dev-super-admin',
-      full_name: 'Super Admin',
-      phone: null,
-      avatar_url: null,
-      role: 'super_admin',
-      status: 'active',
-      created_at: new Date().toISOString(),
-    },
-  },
-  'admin@berryco.com': {
-    password: 'password123',
-    profile: {
-      id: 'dev-admin',
-      full_name: 'Admin',
-      phone: null,
-      avatar_url: null,
-      role: 'admin',
-      status: 'active',
-      created_at: new Date().toISOString(),
-    },
-  },
-  'staff@berryco.com': {
-    password: 'password123',
-    profile: {
-      id: 'dev-staff',
-      full_name: 'Staff',
-      phone: null,
-      avatar_url: null,
-      role: 'staff',
-      status: 'active',
-      created_at: new Date().toISOString(),
-    },
-  },
-}
-
 export async function loginAdmin(
   _prevState: LoginState,
   formData: FormData
@@ -73,44 +31,74 @@ export async function loginAdmin(
     return { error: 'Enter your email and password.' }
   }
 
-  const account = DEV_ADMINS[email]
+  const supabase = await createClient()
 
-  if (!account || account.password !== password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+  if (error || !data.user) {
     return { error: 'Incorrect email or password.' }
   }
 
-  const cookieStore = await cookies()
-  cookieStore.set(SESSION_COOKIE, email, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  })
+  const { data: profile, error: profileError } = await createAdminClient()
+    .from('profiles')
+    .select('*')
+    .eq('id', data.user.id)
+    .single()
+
+  if (profileError || !profile) {
+    await supabase.auth.signOut()
+    return { error: 'No profile found for this account.' }
+  }
+
+  if (!ADMIN_ROLES.includes(profile.role as (typeof ADMIN_ROLES)[number])) {
+    await supabase.auth.signOut()
+    return { error: 'This account does not have admin access.' }
+  }
+
+  if (profile.status === 'suspended') {
+    await supabase.auth.signOut()
+    return { error: 'This account has been suspended.' }
+  }
 
   redirect('/admin')
 }
 
 export async function logoutAdmin() {
-  const cookieStore = await cookies()
-  cookieStore.delete(SESSION_COOKIE)
+  const supabase = await createClient()
+  await supabase.auth.signOut()
   redirect('/admin/login')
 }
 
+/**
+ * Reads the real Supabase session (via cookies, through the server client)
+ * and joins it against the profile row. Returns null if there's no
+ * session, no profile, or the profile isn't an admin role — callers don't
+ * need to re-check role for basic gating, though createAdminAccount /
+ * deleteAdminAccount still check for super_admin specifically.
+ */
 export async function getCurrentAdmin(): Promise<{
   user: { id: string; email: string | null }
   profile: Profile
 } | null> {
-  const cookieStore = await cookies()
-  const email = cookieStore.get(SESSION_COOKIE)?.value
+  const supabase = await createClient()
 
-  if (!email) return null
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const account = DEV_ADMINS[email]
-  if (!account) return null
+  if (!user) return null
+
+  const { data: profile, error } = await createAdminClient()
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  if (error || !profile) return null
+  if (!ADMIN_ROLES.includes(profile.role as (typeof ADMIN_ROLES)[number])) return null
 
   return {
-    user: { id: account.profile.id, email },
-    profile: account.profile,
+    user: { id: user.id, email: user.email ?? null },
+    profile: profile as Profile,
   }
 }
