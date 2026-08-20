@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import AuthAlert from '@/components/auth-alert';
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -11,14 +11,15 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
   const supabase = createClient();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setShowSuccessAlert(false);
     setLoading(true);
 
     if (password !== confirmPassword) {
@@ -32,6 +33,7 @@ export default function RegisterPage() {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/login`,
         data: {
           full_name: fullName,
         },
@@ -44,9 +46,8 @@ export default function RegisterPage() {
       return;
     }
 
-    alert('Account created successfully! Welcome to Deckdrop.');
-    router.push('/page');
-    router.refresh();
+    setShowSuccessAlert(true);
+    setLoading(false);
   };
 
   return (
@@ -64,11 +65,19 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-[#E23B2E]/10 border border-[#E23B2E] text-[#E23B2E] text-xs p-3 rounded-xl text-center font-bold">
-            {error}
+        {showSuccessAlert && (
+          <div className="fixed inset-x-4 top-6 z-50 mx-auto max-w-md">
+            <AuthAlert
+              variant="success"
+              title="Check your email"
+              message={`A confirmation link has been sent to ${email}. Please verify your account before logging in.`}
+              onClose={() => setShowSuccessAlert(false)}
+            />
           </div>
+        )}
+
+        {error && (
+          <AuthAlert variant="error" title="Registration failed" message={error} />
         )}
 
         {/* Registration Form */}
