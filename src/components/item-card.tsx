@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-// 1. Define the missing Item and ItemCardProps types
 export interface Item {
   id?: string | number;
   company?: string;
@@ -11,6 +10,7 @@ export interface Item {
   href?: string;
   tags?: string[];
   category?: string;
+  status?: string;
 }
 
 export interface ItemCardProps {
@@ -18,8 +18,8 @@ export interface ItemCardProps {
   className?: string;
 }
 
-// 2. Now TypeScript will know what ItemCardProps is!
 export default function ItemCard({ item, className = "" }: ItemCardProps) {
+  // #region MOCK FALLBACK DEFAULTS (Review/remove default strings once backend supplies complete item records)
   const {
     id,
     company = "Company Name",
@@ -29,24 +29,34 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
     imageUrl,
     href,
     tags = [],
-    category,
+    status,
   } = item;
+  // #endregion MOCK FALLBACK DEFAULTS
 
   const targetHref = href ?? (id !== undefined ? `/products/${id}` : undefined);
+  
+  // Safe case-insensitive check for out-of-stock items
+  const isOutOfStock =
+    status?.toLowerCase().includes("out of stock") ||
+    status?.toLowerCase().includes("sold out");
 
   const content = (
     <article
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-dark/15 bg-paper shadow-sm transition-all duration-200 ${
+      className={`group flex flex-col overflow-hidden rounded-2xl border border-dark/15 bg-paper shadow-xs transition-all duration-200 ${
         targetHref ? "hover:-translate-y-1 hover:shadow-md cursor-pointer" : ""
       } ${className}`.trim()}
     >
-      <div className="relative flex h-52 w-full items-center justify-center bg-cream text-xs font-bold text-dark/30">
+      {/* Main Image Wrapper */}
+      <div className="relative flex h-52 w-full items-center justify-center bg-cream text-xs font-bold text-dark/30 overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
         ) : (
+          // #region MOCK IMAGE PLACEHOLDER (Replace string with official fallback logo asset or default CDN image)
           "Image Placeholder"
+          // #endregion MOCK IMAGE PLACEHOLDER
         )}
 
+        {/* Tags Overlay */}
         {tags.length > 0 && (
           <div className="absolute top-2.5 left-2.5 z-10 flex flex-wrap gap-1">
             {tags.map((tag) => (
@@ -59,8 +69,18 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
             ))}
           </div>
         )}
+
+        {/* Out of Stock Overlay */}
+        {isOutOfStock && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+            <span className="rounded-full bg-red-600 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
+              Out of Stock
+            </span>
+          </div>
+        )}
       </div>
 
+      {/* Item Info */}
       <div className="space-y-0.5 p-3 text-xs font-semibold text-dark">
         <p className="font-bold text-dark/80">{company}</p>
         <p className="text-[11px] font-semibold text-dark group-hover:text-brand transition-colors">

@@ -25,15 +25,6 @@ export default async function ProfilePage() {
 	return (
 		<main className="page-shell">
 			<div className="page-container">
-				<header className="flex items-center justify-between border-b border-dark/10 pb-5">
-					<Link href="/" className="text-2xl font-black tracking-tight text-brand">
-						Berry Co.
-					</Link>
-					<nav className="flex items-center gap-4 text-sm font-bold text-dark">
-						<Link href="/products" className="transition hover:text-brand">Products</Link>
-						<Link href="/cart" className="transition hover:text-brand">Cart</Link>
-					</nav>
-				</header>
 
 				<section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
 					<div className="content-panel flex min-h-0 flex-col justify-between gap-8">
