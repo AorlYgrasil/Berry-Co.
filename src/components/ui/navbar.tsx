@@ -21,9 +21,17 @@ export default async function Navbar() {
             Cart
           </Link>
           {user ? (
-            <Link href="/page" className="hover:text-brand transition">
-              Profile
-            </Link>
+            <>
+              <Link href="/wishlist" className="hover:text-brand transition">
+                Wishlist
+              </Link>
+              <Link href="/orders" className="hover:text-brand transition">
+                Orders
+              </Link>
+              <Link href="/page" className="hover:text-brand transition">
+                Profile
+              </Link>
+            </>
           ) : (
             <Link href="/login" className="hover:text-brand transition">
               Login/Sign up

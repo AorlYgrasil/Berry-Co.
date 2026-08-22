@@ -43,6 +43,12 @@ export default async function ProfilePage() {
 							<Link href="/cart" className="rounded-2xl border border-dark/20 bg-paper px-5 py-4 text-center text-sm font-black text-dark transition hover:border-brand hover:text-brand">
 								View cart
 							</Link>
+							<Link href="/orders" className="rounded-2xl border border-dark/20 bg-paper px-5 py-4 text-center text-sm font-black text-dark transition hover:border-brand hover:text-brand">
+								Order history
+							</Link>
+							<Link href="/wishlist" className="rounded-2xl border border-dark/20 bg-paper px-5 py-4 text-center text-sm font-black text-dark transition hover:border-brand hover:text-brand">
+								Wishlist
+							</Link>
 						</div>
 					</div>
 
