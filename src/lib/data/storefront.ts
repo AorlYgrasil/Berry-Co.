@@ -50,7 +50,7 @@ export async function getCustomerCart(userId: string) {
   if (itemsError) throw new Error(itemsError.message)
 
   const productIds = Array.from(new Set((cartItems ?? []).map((item) => item.product_id)))
-  let productMap = new Map<string, { name: string; price: number; image_url: string | null }>()
+  const productMap = new Map<string, { name: string; price: number; image_url: string | null }>()
 
   if (productIds.length > 0) {
     const { data: products, error: productsError } = await supabase
@@ -108,7 +108,7 @@ export async function getWishlistForUser(userId: string) {
   if (itemsError) throw new Error(itemsError.message)
 
   const productIds = Array.from(new Set((wishlistItems ?? []).map((item) => item.product_id)))
-  let productMap = new Map<string, { name: string; price: number; image_url: string | null }>()
+  const productMap = new Map<string, { name: string; price: number; image_url: string | null }>()
 
   if (productIds.length > 0) {
     const { data: products, error: productsError } = await supabase

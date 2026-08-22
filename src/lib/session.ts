@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
-import { jwtVerify, SignJWT } from "jose";
 import { randomUUID } from "crypto";
+import { createClient } from "@/lib/supabase/server";
 
 // ----------------------------------------------------------------------------
 // You already have src/lib/actions/auth.ts handling admin login. This file is
@@ -19,26 +19,29 @@ import { randomUUID } from "crypto";
 
 import { db } from "./db";
 
-const SESSION_COOKIE = "deckdrop_session";
 const GUEST_CART_COOKIE = "deckdrop_guest_cart";
-const secret = new TextEncoder().encode(process.env.SESSION_SECRET ?? "dev-only-secret-change-me");
 
 export interface SessionPayload {
   userId: string;
-  role: "CUSTOMER" | "ADMIN" | "SUPER_ADMIN";
+  role: "customer" | "staff" | "admin" | "super_admin";
 }
 
-/** Reads and verifies the session cookie. Returns null if unauthenticated. */
+/** Reads the same Supabase Auth session used by the login pages. */
 export async function getSession(): Promise<SessionPayload | null> {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  if (!token) return null;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
 
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload as unknown as SessionPayload;
-  } catch {
-    return null; // expired / tampered token
-  }
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  return {
+    userId: user.id,
+    role: (profile?.role ?? "customer") as SessionPayload["role"],
+  };
 }
 
 /** Convenience helper — throws a 401-shaped error object for route handlers to catch. */
@@ -48,22 +51,6 @@ export async function requireUser(): Promise<SessionPayload> {
     throw Object.assign(new Error("UNAUTHENTICATED"), { status: 401 });
   }
   return session;
-}
-
-export async function createSession(userId: string, role: SessionPayload["role"]) {
-  const token = await new SignJWT({ userId, role })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("30d")
-    .sign(secret);
-
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
 }
 
 // ----------------------------------------------------------------------------

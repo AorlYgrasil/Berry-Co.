@@ -25,7 +25,11 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setErrorMsg(error.message);
+      setErrorMsg(
+        error.message.toLowerCase().includes('email not confirmed')
+          ? 'Please confirm your email address before signing in.'
+          : error.message
+      );
       setLoading(false);
     } else {
       router.push('/page');
@@ -91,7 +95,7 @@ export default function LoginPage() {
 
         {/* Register Link */}
         <div className="mt-6 text-xs text-[#35322E] font-semibold text-center">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/register" className="text-[#E23B2E] font-bold hover:underline">
             Sign Up
           </Link>

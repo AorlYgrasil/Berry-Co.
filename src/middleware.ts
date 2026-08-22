@@ -35,12 +35,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Already logged in and sitting on the login page -> send them into the dashboard.
-  if (isLoginRoute && user) {
-    const dashboardUrl = new URL('/admin', request.url)
-    return NextResponse.redirect(dashboardUrl)
-  }
-
   return response
 }
 
