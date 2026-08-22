@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import CategorySelect from './category-select'
+import SubcategorySelect from './subcategory-select'
 import type { CategoryNode } from '@/lib/data/data-products'
 import type { ProductWithCategory } from '@/types/database'
 
@@ -40,7 +41,6 @@ export default function ProductForm({
             Product name
           </label>
           <input
-            id="name"
             name="name"
             required
             defaultValue={product?.name}
@@ -57,6 +57,13 @@ export default function ProductForm({
             defaultValue={product?.category_id ?? undefined}
             className={inputClass}
           />
+        </div>
+
+        <div>
+          <label htmlFor="subcategory_id" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Subcategory
+          </label>
+          <SubcategorySelect categories={categories} className={inputClass} />
         </div>
 
         <div>
