@@ -39,24 +39,9 @@ export async function loginAdmin(
     return { error: 'Incorrect email or password.' }
   }
 
-  let profile: Profile | null = null
-  let profileError: { message: string } | null = null
-  try {
-    const result = await createAdminClient()
-      .from('profiles')
-      .select('*')
-      .eq('id', data.user.id)
-      .single()
-    profile = result.data as Profile | null
-    profileError = result.error
-  } catch (error) {
-    await supabase.auth.signOut()
-    return {
-      error: error instanceof Error
-        ? error.message
-        : 'Admin authentication is not configured on Railway.',
-    }
-  }
+  const profileResult = await getProfileForAdmin(supabase, data.user.id)
+  const profile = profileResult.profile
+  const profileError = profileResult.error
 
   if (profileError || !profile) {
     await supabase.auth.signOut()
@@ -101,19 +86,9 @@ export async function getCurrentAdmin(): Promise<{
 
   if (!user) return null
 
-  let profile: Profile | null = null
-  let error: { message: string } | null = null
-  try {
-    const result = await createAdminClient()
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-    profile = result.data as Profile | null
-    error = result.error
-  } catch {
-    return null
-  }
+  const profileResult = await getProfileForAdmin(supabase, user.id)
+  const profile = profileResult.profile
+  const error = profileResult.error
 
   if (error || !profile) return null
   if (!ADMIN_ROLES.includes(profile.role as (typeof ADMIN_ROLES)[number])) return null
@@ -121,5 +96,41 @@ export async function getCurrentAdmin(): Promise<{
   return {
     user: { id: user.id, email: user.email ?? null },
     profile: profile as Profile,
+  }
+}
+
+async function getProfileForAdmin(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<{ profile: Profile | null; error: { message: string } | null }> {
+  const regularResult = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (regularResult.data) {
+    return { profile: regularResult.data as Profile, error: null }
+  }
+
+  try {
+    const adminResult = await createAdminClient()
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+    return {
+      profile: adminResult.data as Profile | null,
+      error: adminResult.error,
+    }
+  } catch (error) {
+    return {
+      profile: null,
+      error: regularResult.error ?? {
+        message: error instanceof Error
+          ? error.message
+          : 'Admin authentication is not configured on Railway.',
+      },
+    }
   }
 }
