@@ -64,7 +64,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           
           {/* 1️⃣ Photo Gallery Card (Mobile: 1st | Desktop: Top-Left) */}
           <div className="lg:col-span-8 lg:col-start-1 lg:row-start-1 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10">
-            <ProductGallery />
+            <ProductGallery name={product.name} imageUrl={product.image_url} />
           </div>
 
           {/* 2️⃣ Sticky Buy Box Panel (Mobile: 2nd | Desktop: Top-Right) */}
@@ -80,7 +80,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 3️⃣ Accordions Card (Mobile: 3rd | Desktop: Bottom-Left) */}
           <div className="lg:col-span-8 lg:col-start-1 lg:row-start-2 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10">
-            <ProductAccordions />
+            <ProductAccordions description={product.description ?? 'No product description available.'} specs={[`SKU: ${product.sku}`, `Stock: ${product.stock} unit(s)`]} />
           </div>
 
         </div>
