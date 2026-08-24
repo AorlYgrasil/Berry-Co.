@@ -1,29 +1,20 @@
-import { use } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import ProductGallery from "@/components/products/product-gallery";
 import ProductAccordions from "@/components/products/product-accordion";
 import ProductBuyBox from "@/components/products/product-buy-box";
+import { getProductById } from "@/lib/data/data-products";
 
 type PageProps = {
   params: Promise<{ id: string }>;
 };
 
-export default function ProductDetailPage({ params }: PageProps) {
-  const { id } = use(params);
+export default async function ProductDetailPage({ params }: PageProps) {
+  const { id } = await params;
+  const product = await getProductById(id);
+  if (!product) notFound();
 
-  // #region MOCK DATA (To be replaced with database fetch using `id`)
-  const product = {
-    id,
-    name: `Deck ${id}`,      // Current Item
-    category: "Cards",       // Category
-    brand: "Deckdrop",       // Brand
-    series: "Pokemon",       // Series
-    price: "₱120",
-    status: "Pre-orders Open",
-    tag: "Pokemon",
-    preorderPeriod: "2026/04/28 ~ 2026/06/10 (JST)",
-  };
-  // #endregion MOCK DATA
+  const status = product.status === 'out_of_stock' ? 'Out of Stock' : 'In Stock';
 
   return (
     <main className="min-h-screen bg-background p-4 sm:p-8 text-dark">
@@ -39,26 +30,26 @@ export default function ProductDetailPage({ params }: PageProps) {
             </li>
             <li>
               <Link
-                href={`/products?category=${encodeURIComponent(product.category)}`}
+                href={`/products?category=${encodeURIComponent(product.category_name ?? '')}`}
                 className="hover:text-brand transition-colors"
               >
-                {product.category}
+                {product.category_name ?? 'Uncategorized'}
               </Link>
             </li>
             <li>
               <Link
-                href={`/products?brand=${encodeURIComponent(product.brand)}`}
+                href={`/products?category=${encodeURIComponent(product.subcategory_name ?? '')}`}
                 className="hover:text-brand transition-colors"
               >
-                {product.brand}
+                {product.subcategory_name ?? 'Product'}
               </Link>
             </li>
             <li>
               <Link
-                href={`/products?series=${encodeURIComponent(product.series)}`}
+                href={`/products?search=${encodeURIComponent(product.sku)}`}
                 className="hover:text-brand transition-colors"
               >
-                {product.series}
+                {product.sku}
               </Link>
             </li>
             {/* Current Active Item */}
@@ -81,10 +72,9 @@ export default function ProductDetailPage({ params }: PageProps) {
             <ProductBuyBox
               productId={product.id}
               name={product.name}
-              price={product.price}
-              status={product.status}
-              tag={product.tag}
-              preorderPeriod={product.preorderPeriod}
+              price={`₱${Number(product.price).toLocaleString('en-PH')}`}
+              status={status}
+              tag={product.category_name ?? 'Berry Co.'}
             />
           </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 interface CartItem {
@@ -9,23 +9,59 @@ interface CartItem {
   category?: string;
   price: number;
   quantity: number;
+  image_url: string | null;
 }
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCart = async () => {
+    const response = await fetch('/api/cart');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error ?? 'Unable to load your cart.');
+    setCart((data.items ?? []).map((item: { id: string; quantity: number; unit_price_snapshot: number; product: { name: string; image_url: string | null } | null }) => ({
+      id: item.id,
+      name: item.product?.name ?? 'Product unavailable',
+      price: Number(item.unit_price_snapshot),
+      quantity: item.quantity,
+      image_url: item.product?.image_url ?? null,
+    })));
+  };
+
+  useEffect(() => {
+    fetch('/api/cart')
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error ?? 'Unable to load your cart.');
+        return data;
+      })
+      .then((data) => {
+        setCart((data.items ?? []).map((item: { id: string; quantity: number; unit_price_snapshot: number; product: { name: string; image_url: string | null } | null }) => ({
+          id: item.id,
+          name: item.product?.name ?? 'Product unavailable',
+          price: Number(item.unit_price_snapshot),
+          quantity: item.quantity,
+          image_url: item.product?.image_url ?? null,
+        })));
+      })
+      .catch((loadError: Error) => setError(loadError.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const updateQuantity = (itemId: string, delta: number) => {
-    setCart((currentCart) =>
-      currentCart
-        .map((item) =>
-          item.id === itemId ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
+    const item = cart.find((entry) => entry.id === itemId);
+    if (!item) return;
+    fetch(`/api/cart/${itemId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: Math.max(1, item.quantity + delta) }) })
+      .then((response) => response.ok ? loadCart() : response.json().then((data) => Promise.reject(new Error(data.error))))
+      .catch((updateError: Error) => setError(updateError.message));
   };
 
   const removeFromCart = (itemId: string) => {
-    setCart((currentCart) => currentCart.filter((item) => item.id !== itemId));
+    fetch(`/api/cart/${itemId}`, { method: 'DELETE' })
+      .then((response) => response.ok ? loadCart() : response.json().then((data) => Promise.reject(new Error(data.error))))
+      .catch((removeError: Error) => setError(removeError.message));
   };
 
   const subtotal = cart.reduce<number>((acc, item) => acc + item.price * item.quantity, 0);
@@ -39,7 +75,7 @@ export default function CartPage() {
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Cart Items Section */}
         <div className="flex-1 bg-highlights rounded-3xl p-6 shadow-sm border border-dark/10 w-full space-y-4">
-          {cart.length === 0 ? (
+          {loading ? <p className="py-12 text-center text-sm font-semibold text-dark/60">Loading cart...</p> : error ? <p className="py-12 text-center text-sm font-semibold text-brand">{error}</p> : cart.length === 0 ? (
             <div className="text-center py-12 space-y-4">
               <p className="text-sm font-semibold text-dark/70">Your cart is empty.</p>
               <Link
@@ -56,8 +92,8 @@ export default function CartPage() {
                 className="flex items-center justify-between bg-[#F3E4C8]/50 border border-dark/10 rounded-2xl p-4 gap-4"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-[#F3E4C8] rounded-xl flex items-center justify-center text-[10px] text-dark/60 font-bold">
-                    Image
+                  <div className="w-16 h-16 bg-[#F3E4C8] rounded-xl flex items-center justify-center text-[10px] text-dark/60 font-bold overflow-hidden">
+                    {item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : 'Image'}
                   </div>
                   <div>
                     <h3 className="font-bold text-sm text-dark">{item.name}</h3>

@@ -7,59 +7,74 @@ import ItemCard from "@/components/item-card";
 import FilterDropdown from "@/components/filter-dropdown";
 import PriceRangeSlider from "@/components/price-range-slider";
 
-// #region MOCK DATA & FILTER OPTIONS
 const categoryOptions = ["Cards", "Figurines", "Accessories"];
 const seriesOptions = ["Pokemon", "Magic The Gathering", "Yu-Gi-Oh"];
 const availableTags = ["New", "Limited", "Popular", "Featured", "Exclusive", "Pre-Order", "Sale"];
 const brandOptions = ["Deckdrop", "Studio", "Guest"];
 
-const dummyProducts = Array.from({ length: 16 }, (_, i) => {
-  const categories = ["Cards", "Figurines", "Accessories"];
-  const brands = ["Deckdrop", "Studio", "Guest"];
-  const seriesList = ["Pokemon", "Magic The Gathering", "Yu-Gi-Oh"];
-  const allTags = [
-    ["New", "Pre-Order", "Pokemon"],
-    ["Limited", "Exclusive", "Magic The Gathering"],
-    ["Popular", "Featured", "Yu-Gi-Oh"],
-    ["Sale", "New", "Studio"],
-  ];
-
-  const category = categories[i % categories.length];
-  const brand = brands[i % brands.length];
-  const series = seriesList[i % seriesList.length];
-  const tags = allTags[i % allTags.length];
-  const price = 500 + (i + 1) * 250;
-
-  return {
-    id: `item-${i + 1}`,
-    company: brand,
-    name: `${series} ${category.slice(0, -1)} ${String.fromCharCode(65 + (i % 6))}`,
-    desc: `Premium Edition ${category} #${i + 1}`,
-    price: `₱${price}`,
-    category: category,
-    tags: tags,
-  };
-});
-// #endregion MOCK DATA & FILTER OPTIONS
+type CatalogProduct = {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  image_url: string | null;
+  description: string | null;
+  category_name: string | null;
+  status: string;
+};
 
 function ProductsContent() {
   const searchParams = useSearchParams();
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(() => searchParams.get("search") || searchParams.get("query") || "");
   const [categorySearch, setCategorySearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>(() => {
+    const value = searchParams.get("category");
+    return value ? [value] : [];
+  });
   const [seriesSearch, setSeriesSearch] = useState("");
-  const [selectedSeries, setSelectedSeries] = useState<string[]>([]);
+  const [selectedSeries, setSelectedSeries] = useState<string[]>(() => {
+    const value = searchParams.get("series");
+    return value ? [value] : [];
+  });
   const [tagSearch, setTagSearch] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(() => {
+    const value = searchParams.get("tag");
+    return value ? [value] : [];
+  });
   const [brandSearch, setBrandSearch] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState<string[]>([]);
+  const [selectedBrand, setSelectedBrand] = useState<string[]>(() => {
+    const value = searchParams.get("brand");
+    return value ? [value] : [];
+  });
   const [minPrice, setMinPrice] = useState("0");
   const [maxPrice, setMaxPrice] = useState("");
   const [priceValue, setPriceValue] = useState(5000);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // 📱 Mobile Filter Drawer State
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/products?page=1&pageSize=500')
+      .then(async (response) => {
+        if (!response.ok) throw new Error('Unable to load products.')
+        return response.json()
+      })
+      .then((result: { products?: CatalogProduct[] }) => {
+        if (!cancelled) setProducts(result.products ?? [])
+      })
+      .catch((error: Error) => {
+        if (!cancelled) setLoadError(error.message)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [])
 
   // Calculate active filter count for mobile badge
   const activeFilterCount =
@@ -68,53 +83,29 @@ function ProductsContent() {
     selectedBrand.length +
     selectedTags.length;
 
-  // 🔗 URL Query Params parsing
-  useEffect(() => {
-    const categoryParam = searchParams.get("category");
-    const brandParam = searchParams.get("brand");
-    const seriesParam = searchParams.get("series");
-    const tagParam = searchParams.get("tag");
-    const searchParam = searchParams.get("search") || searchParams.get("query");
-
-    if (categoryParam) setSelectedCategory([categoryParam]);
-    if (brandParam) setSelectedBrand([brandParam]);
-    if (seriesParam) setSelectedSeries([seriesParam]);
-    if (tagParam) setSelectedTags([tagParam]);
-    if (searchParam) setQuery(searchParam);
-  }, [searchParams]);
-
   // Frontend Filtering Logic
   const filteredProducts = useMemo(() => {
     const min = Number(minPrice) || 0;
     const max = maxPrice === "" ? Infinity : Number(maxPrice) || Infinity;
     const queryLower = query.trim().toLowerCase();
-    const selectedTagSet = new Set(selectedTags.map((tag) => tag.toLowerCase()));
-
-    return dummyProducts.filter((item) => {
-      const label = `${item.company} ${item.name} ${item.desc} ${item.category}`.toLowerCase();
+    return products.filter((item) => {
+      const label = `${item.name} ${item.description ?? ''} ${item.sku} ${item.category_name ?? ''}`.toLowerCase();
       const matchesQuery = queryLower === "" || label.includes(queryLower);
       
       const matchesCategory =
         selectedCategory.length === 0 ||
-        selectedCategory.some((cat) => item.category.toLowerCase() === cat.toLowerCase());
+        selectedCategory.some((cat) => item.category_name?.toLowerCase() === cat.toLowerCase());
 
       const matchesSeries =
         selectedSeries.length === 0 ||
         selectedSeries.some((series) => item.name.toLowerCase().includes(series.toLowerCase()));
 
-      const matchesTags =
-        selectedTags.length === 0 || item.tags.some((tag) => selectedTagSet.has(tag.toLowerCase()));
-
-      const matchesBrand =
-        selectedBrand.length === 0 ||
-        selectedBrand.some((brand) => item.company.toLowerCase().includes(brand.toLowerCase()));
-
-      const price = Number(item.price.toString().replace(/[^0-9.]/g, "")) || 0;
+      const price = Number(item.price) || 0;
       const matchesPrice = price >= min && price <= max;
 
-      return matchesQuery && matchesCategory && matchesSeries && matchesTags && matchesPrice;
+      return matchesQuery && matchesCategory && matchesSeries && matchesPrice;
     });
-  }, [query, selectedCategory, selectedSeries, selectedTags, selectedBrand, minPrice, maxPrice]);
+  }, [products, query, selectedCategory, selectedSeries, minPrice, maxPrice]);
 
   const removeTag = (tag: string) => {
     setSelectedTags((current) => current.filter((value) => value !== tag));
@@ -199,7 +190,7 @@ function ProductsContent() {
             {/* 1️⃣ Category Filter */}
             <FilterDropdown
               label="Category"
-              options={categoryOptions}
+              options={[...new Set([...categoryOptions, ...products.map((product) => product.category_name).filter((value): value is string => Boolean(value))])]}
               searchValue={categorySearch}
               selectedValues={selectedCategory}
               onSearchChange={setCategorySearch}
@@ -362,17 +353,24 @@ function ProductsContent() {
             </button>
           </div>
 
+          {loading && <p className="py-12 text-center text-sm font-semibold text-dark/60">Loading products...</p>}
+          {loadError && <p className="py-12 text-center text-sm font-semibold text-brand">{loadError}</p>}
+          {!loading && !loadError && filteredProducts.length === 0 && (
+            <p className="py-12 text-center text-sm font-semibold text-dark/60">No products found.</p>
+          )}
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {filteredProducts.map((item) => (
               <ItemCard
                 key={item.id}
                 item={{
                   id: item.id,
-                  company: item.company,
+                  company: "Berry Co.",
                   name: item.name,
-                  description: item.desc,
-                  price: item.price,
-                  tags: item.tags,
+                  description: item.description ?? item.sku,
+                  price: `₱${Number(item.price).toLocaleString('en-PH')}`,
+                  imageUrl: item.image_url ?? undefined,
+                  category: item.category_name ?? undefined,
+                  status: item.status,
                 }}
               />
             ))}
