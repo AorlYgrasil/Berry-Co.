@@ -79,6 +79,7 @@ export default function ProductDetailPage({ params }: PageProps) {
           {/* 2️⃣ Sticky Buy Box Panel (Mobile: 2nd | Desktop: Top-Right) */}
           <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24">
             <ProductBuyBox
+              productId={product.id}
               name={product.name}
               price={product.price}
               status={product.status}

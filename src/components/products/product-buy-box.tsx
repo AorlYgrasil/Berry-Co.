@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 type BuyBoxProps = {
+  productId: string;
   name: string;
   price: string;
   status: "In Stock" | "Pre-orders Open" | "Out of Stock" | "Sold Out" | string;
@@ -11,29 +12,51 @@ type BuyBoxProps = {
 };
 
 export default function ProductBuyBox({
+  productId,
   name,
   price,
   status,
   tag,
   preorderPeriod,
 }: BuyBoxProps) {
-  // #region MOCK STATE & HANDLERS (To be connected to Cart & Wishlist/Notification APIs)
   const [inWishlist, setInWishlist] = useState(false);
   const [added, setAdded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCartClick = async () => {
     if (isOutOfStock) return;
 
-    // 🔌 BACKEND API INTEGRATION POINT (e.g. await addToCart({ productId }))
+    setError(null);
+    const response = await fetch('/api/cart', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productId, quantity: 1 }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      setError(data.error ?? 'Unable to add this item to your cart.');
+      return;
+    }
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleWishlistToggle = async () => {
-    // 🔌 BACKEND API INTEGRATION POINT (e.g. await toggleWishlist({ productId }))
+    setError(null);
+    const response = inWishlist
+      ? await fetch(`/api/wishlist/${productId}`, { method: 'DELETE' })
+      : await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId }),
+        });
+    const data = await response.json();
+    if (!response.ok) {
+      setError(data.error ?? 'Unable to update your wishlist.');
+      return;
+    }
     setInWishlist((prev) => !prev);
   };
-  // #endregion MOCK STATE & HANDLERS
 
   // Status Helper Flags
   const isOutOfStock =
@@ -122,6 +145,8 @@ export default function ProductBuyBox({
             : "Add to Wishlist"}
         </button>
       </div>
+
+      {error && <p className="text-right text-xs font-bold text-brand">{error}</p>}
 
     </div>
   );

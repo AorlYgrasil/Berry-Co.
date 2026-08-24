@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { createClient } from '@/lib/supabase/server'
 
 /**
  * Wishlist is intentionally simple: it's a save-for-later list, not tied to
@@ -7,45 +7,86 @@ import { db } from "./db";
  */
 
 export async function getOrCreateWishlist(userId: string) {
-  return db.wishlist.upsert({ where: { userId }, create: { userId } });
+  const supabase = await createClient()
+  const { data: existing, error: lookupError } = await supabase
+    .from('wishlists')
+    .select('id, user_id, created_at')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (lookupError) throw new Error(lookupError.message)
+  if (existing) return existing
+
+  const { data: created, error: createError } = await supabase
+    .from('wishlists')
+    .insert({ user_id: userId })
+    .select('id, user_id, created_at')
+    .single()
+
+  if (createError || !created) throw new Error(createError?.message ?? 'Unable to create wishlist.')
+  return created
 }
 
 export async function getWishlist(userId: string) {
   const wishlist = await getOrCreateWishlist(userId);
-  return db.wishlistItem.findMany({
-    where: { wishlistId: wishlist.id },
-    include: { product: true },
-    orderBy: { addedAt: "desc" },
-  });
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('wishlist_items')
+    .select('id, wishlist_id, product_id, added_at, products(id, name, price, image_url)')
+    .eq('wishlist_id', wishlist.id)
+    .order('added_at', { ascending: false })
+
+  if (error) throw new Error(error.message)
+  return data ?? []
 }
 
 export async function addToWishlist(userId: string, productId: string) {
-  const product = await db.product.findUnique({ where: { id: productId } });
-  if (!product || !product.isActive) {
-    throw Object.assign(new Error("PRODUCT_NOT_FOUND"), { status: 404 });
-  }
+  const supabase = await createClient()
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select('id')
+    .eq('id', productId)
+    .maybeSingle()
+  if (productError || !product) throw Object.assign(new Error('PRODUCT_NOT_FOUND'), { status: 404 })
 
   const wishlist = await getOrCreateWishlist(userId);
+  const { data: existing } = await supabase
+    .from('wishlist_items')
+    .select('id')
+    .eq('wishlist_id', wishlist.id)
+    .eq('product_id', productId)
+    .maybeSingle()
+  if (existing) return existing
 
-  // Idempotent: re-adding an already-wishlisted product is a no-op success,
-  // not an error — the "Add to Wishlist" button doesn't need to know state.
-  return db.wishlistItem.upsert({
-    where: { wishlistId_productId: { wishlistId: wishlist.id, productId } },
-    create: { wishlistId: wishlist.id, productId },
-    update: {},
-  });
+  const { data: item, error } = await supabase
+    .from('wishlist_items')
+    .insert({ wishlist_id: wishlist.id, product_id: productId })
+    .select('id, wishlist_id, product_id, added_at')
+    .single()
+  if (error || !item) throw new Error(error?.message ?? 'Unable to save wishlist item.')
+  return item
 }
 
 export async function removeFromWishlist(userId: string, productId: string) {
   const wishlist = await getOrCreateWishlist(userId);
-  await db.wishlistItem.deleteMany({ where: { wishlistId: wishlist.id, productId } });
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('wishlist_items')
+    .delete()
+    .eq('wishlist_id', wishlist.id)
+    .eq('product_id', productId)
+  if (error) throw new Error(error.message)
 }
 
 /** Used to move a saved item straight into the cart ("Move to Cart" UX). */
 export async function isProductWishlisted(userId: string, productId: string) {
   const wishlist = await getOrCreateWishlist(userId);
-  const item = await db.wishlistItem.findUnique({
-    where: { wishlistId_productId: { wishlistId: wishlist.id, productId } },
-  });
+  const supabase = await createClient()
+  const { data: item } = await supabase
+    .from('wishlist_items')
+    .select('id')
+    .eq('wishlist_id', wishlist.id)
+    .eq('product_id', productId)
+    .maybeSingle()
   return Boolean(item);
 }
