@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { ShippingAddress } from './db'
 import { generateOrderNumber } from './order-number'
 
@@ -38,7 +39,13 @@ export interface CheckoutInput {
  * the $transaction note in db.ts.)
  */
 export async function checkout(input: CheckoutInput) {
-  const supabase = await createClient()
+  const authClient = await createClient()
+  const supabase = createAdminClient()
+  const { data: { user } } = await authClient.auth.getUser()
+  if (!user || user.id !== input.userId) {
+    throw Object.assign(new Error('UNAUTHENTICATED'), { status: 401 })
+  }
+
   const { data: cart } = await supabase.from('carts').select('id').eq('user_id', input.userId).maybeSingle()
   if (!cart) throw Object.assign(new Error('Your cart is empty.'), { status: 400 })
 
@@ -82,7 +89,7 @@ export async function checkout(input: CheckoutInput) {
       order_number: generateOrderNumber(),
       customer_id: input.userId,
       customer_name: input.shippingAddress.fullName,
-      customer_email: (await supabase.auth.getUser()).data.user?.email ?? null,
+      customer_email: user.email ?? null,
       total_amount: subtotal + shippingFee,
       status: 'pending',
       payment_status: 'pending',
