@@ -20,6 +20,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Environment variables
+
+Create `.env.local` for local development with values from Supabase Project
+Settings → API:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+For Railway, add these variables in the service's Variables tab, change
+`NEXT_PUBLIC_SITE_URL` to the Railway public URL, save them, and redeploy.
+`.env.local` is intentionally ignored by GitHub and is not deployed.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
