@@ -2,7 +2,6 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import type { Profile } from '@/types/database'
 
 export type LoginState = {
@@ -39,7 +38,7 @@ export async function loginAdmin(
     return { error: 'Incorrect email or password.' }
   }
 
-  const { data: profile, error: profileError } = await createAdminClient()
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', data.user.id)
@@ -88,7 +87,7 @@ export async function getCurrentAdmin(): Promise<{
 
   if (!user) return null
 
-  const { data: profile, error } = await createAdminClient()
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)

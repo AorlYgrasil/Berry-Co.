@@ -66,18 +66,21 @@ export default function ProductForm({
           <SubcategorySelect categories={categories} className={inputClass} />
         </div>
 
-        <div>
-          <label htmlFor="sku" className="mb-1.5 block text-sm font-medium text-stone-700">
-            SKU
-          </label>
-          <input
-            id="sku"
-            name="sku"
-            defaultValue={product?.sku ?? ''}
-            placeholder={product ? undefined : 'Leave blank to auto-generate'}
-            className={inputClass}
-          />
-        </div>
+        {product ? (
+          <div>
+            <label htmlFor="sku" className="mb-1.5 block text-sm font-medium text-stone-700">
+              SKU
+            </label>
+            <input
+              id="sku"
+              name="sku"
+              defaultValue={product.sku}
+              className={inputClass}
+            />
+          </div>
+        ) : (
+          <input type="hidden" name="sku" value="" />
+        )}
 
         <div>
           <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-stone-700">
