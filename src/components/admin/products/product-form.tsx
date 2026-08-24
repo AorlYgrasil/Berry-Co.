@@ -1,8 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import CategorySelect from './category-select'
-import SubcategorySelect from './subcategory-select'
+import CategoryFields from './category-fields'
 import type { CategoryNode } from '@/lib/data/data-products'
 import type { ProductWithCategory } from '@/types/database'
 
@@ -48,22 +47,8 @@ export default function ProductForm({
           />
         </div>
 
-        <div>
-          <label htmlFor="category_id" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Category
-          </label>
-          <CategorySelect
-            categories={categories}
-            defaultValue={product?.category_id ?? undefined}
-            className={inputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="subcategory_id" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Subcategory
-          </label>
-          <SubcategorySelect categories={categories} className={inputClass} />
+        <div className="sm:col-span-2">
+          <CategoryFields categories={categories} defaultValue={product?.category_id ?? undefined} />
         </div>
 
         {product ? (

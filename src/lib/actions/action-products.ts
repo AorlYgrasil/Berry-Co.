@@ -16,6 +16,24 @@ function generateSku(name: string) {
   return `${base}-${suffix}`
 }
 
+async function validateCategorySelection(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  categoryId: string,
+  subcategoryId: string
+) {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('id, parent_id, level')
+    .eq('id', subcategoryId)
+    .single()
+
+  if (error || !data || data.level !== 1 || data.parent_id !== categoryId) {
+    return false
+  }
+
+  return true
+}
+
 /** Add a new product to the catalog. */
 export async function createProduct(
   _prevState: ProductFormState,
@@ -25,13 +43,19 @@ export async function createProduct(
   const price = Number(formData.get('price') ?? 0)
   const stock = Number(formData.get('stock') ?? 0)
   let sku = String(formData.get('sku') ?? '').trim()
+  const categoryId = String(formData.get('category_id') ?? '')
+  const subcategoryId = String(formData.get('subcategory_id') ?? '')
 
   if (!name) return { error: 'Product name is required.' }
   if (Number.isNaN(price) || price < 0) return { error: 'Enter a valid price.' }
   if (Number.isNaN(stock) || stock < 0) return { error: 'Enter a valid starting stock.' }
+  if (!subcategoryId) return { error: 'Select a subcategory.' }
   if (!sku) sku = generateSku(name)
 
   const supabase = await createClient()
+  if (!(await validateCategorySelection(supabase, categoryId, subcategoryId))) {
+    return { error: 'Select a valid category and subcategory.' }
+  }
 
   const payload = {
     name,
@@ -39,7 +63,7 @@ export async function createProduct(
     price,
     stock,
     low_stock_threshold: Number(formData.get('low_stock_threshold') ?? 5),
-    category_id: String(formData.get('category_id') ?? '') || null,
+    category_id: subcategoryId || categoryId || null,
     description: String(formData.get('description') ?? '') || null,
     image_url: String(formData.get('image_url') ?? '') || null,
   }
@@ -65,19 +89,25 @@ export async function updateProduct(
   const name = String(formData.get('name') ?? '').trim()
   const sku = String(formData.get('sku') ?? '').trim()
   const price = Number(formData.get('price') ?? 0)
+  const categoryId = String(formData.get('category_id') ?? '')
+  const subcategoryId = String(formData.get('subcategory_id') ?? '')
 
   if (!name) return { error: 'Product name is required.' }
   if (!sku) return { error: 'SKU is required.' }
   if (Number.isNaN(price) || price < 0) return { error: 'Enter a valid price.' }
+  if (!subcategoryId) return { error: 'Select a subcategory.' }
 
   const supabase = await createClient()
+  if (!(await validateCategorySelection(supabase, categoryId, subcategoryId))) {
+    return { error: 'Select a valid category and subcategory.' }
+  }
 
   const payload = {
     name,
     sku,
     price,
     low_stock_threshold: Number(formData.get('low_stock_threshold') ?? 5),
-    category_id: String(formData.get('category_id') ?? '') || null,
+    category_id: subcategoryId || categoryId || null,
     description: String(formData.get('description') ?? '') || null,
     image_url: String(formData.get('image_url') ?? '') || null,
     updated_at: new Date().toISOString(),
