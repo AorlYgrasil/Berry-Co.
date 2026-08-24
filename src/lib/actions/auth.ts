@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { Profile } from '@/types/database'
 
 export type LoginState = {
@@ -38,11 +39,24 @@ export async function loginAdmin(
     return { error: 'Incorrect email or password.' }
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', data.user.id)
-    .single()
+  let profile: Profile | null = null
+  let profileError: { message: string } | null = null
+  try {
+    const result = await createAdminClient()
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single()
+    profile = result.data as Profile | null
+    profileError = result.error
+  } catch (error) {
+    await supabase.auth.signOut()
+    return {
+      error: error instanceof Error
+        ? error.message
+        : 'Admin authentication is not configured on Railway.',
+    }
+  }
 
   if (profileError || !profile) {
     await supabase.auth.signOut()
@@ -87,11 +101,19 @@ export async function getCurrentAdmin(): Promise<{
 
   if (!user) return null
 
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  let profile: Profile | null = null
+  let error: { message: string } | null = null
+  try {
+    const result = await createAdminClient()
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+    profile = result.data as Profile | null
+    error = result.error
+  } catch {
+    return null
+  }
 
   if (error || !profile) return null
   if (!ADMIN_ROLES.includes(profile.role as (typeof ADMIN_ROLES)[number])) return null
