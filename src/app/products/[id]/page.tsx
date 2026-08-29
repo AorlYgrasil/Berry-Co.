@@ -15,6 +15,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
   if (!product) notFound();
 
   const status = product.status === 'out_of_stock' ? 'Out of Stock' : 'In Stock';
+  const productDescription =
+    product.description?.trim() ||
+    `${product.name} is part of the Berry Co. collection and brings premium detail, collectible quality, and standout design to fans and collectors alike.`;
 
   return (
     <main className="min-h-screen bg-background p-4 sm:p-8 text-dark">
@@ -80,7 +83,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 3️⃣ Accordions Card (Mobile: 3rd | Desktop: Bottom-Left) */}
           <div className="lg:col-span-8 lg:col-start-1 lg:row-start-2 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10">
-            <ProductAccordions description={product.description ?? 'No product description available.'} specs={[`SKU: ${product.sku}`, `Stock: ${product.stock} unit(s)`]} />
+            <ProductAccordions description={productDescription} specs={[`SKU: ${product.sku}`, `Stock: ${product.stock} unit(s)`]} />
           </div>
 
         </div>

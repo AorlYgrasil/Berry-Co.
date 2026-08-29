@@ -24,7 +24,7 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
     id,
     company = "Company Name",
     name = "Item Name",
-    description = "Short Description",
+    description,
     price = "₱120",
     imageUrl,
     href,
@@ -33,6 +33,8 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
   } = item;
   // #endregion MOCK FALLBACK DEFAULTS
 
+  const safeName = name?.trim() || "Item Name";
+  const safeDescription = description?.trim() || `${safeName} from the Berry Co. collection — a premium collectible with standout detail and craftsmanship.`;
   const targetHref = href ?? (id !== undefined ? `/products/${id}` : undefined);
   
   // Safe case-insensitive check for out-of-stock items
@@ -81,10 +83,13 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
       </div>
 
       {/* Item Info */}
-      <div className="space-y-0.5 p-3 text-xs font-semibold text-dark">
+      <div className="space-y-1 p-3 text-xs font-semibold text-dark">
         <p className="font-bold text-dark/80">{company}</p>
-        <p className="text-[11px] font-semibold text-dark group-hover:text-brand transition-colors">
-          {name} | {description}
+        <p className="text-sm font-black leading-snug text-dark group-hover:text-brand transition-colors">
+          {safeName}
+        </p>
+        <p className="text-[11px] font-semibold leading-relaxed text-dark/70">
+          {safeDescription}
         </p>
         <p className="pt-1 text-sm font-extrabold text-brand">{price}</p>
       </div>

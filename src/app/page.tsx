@@ -26,7 +26,9 @@ export default async function HomePage() {
                     id: product.id,
                     company: "Berry Co.",
                     name: product.name,
-                    description: product.description ?? product.sku,
+                    description:
+                      product.description?.trim() ||
+                      `${product.name} is part of our curated collectible collection, built for collectors and fans who want premium detail and standout design.`,
                     price: `₱${Number(product.price).toLocaleString("en-PH")}`,
                     imageUrl: product.image_url ?? undefined,
                     status: product.status,
