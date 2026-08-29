@@ -75,14 +75,9 @@ export default function ProductBuyBox({
   return (
     <div className="rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10 space-y-5">
       
-      {/* Title & Tag */}
-      <div className="space-y-2 text-right">
-        <h1 className="text-xl font-black text-dark">{name}</h1>
-        <div className="flex justify-end">
-          <span className="inline-flex items-center gap-1 rounded-full bg-cream px-3 py-1 text-[11px] font-bold text-dark">
-            {tag} <span className="cursor-pointer text-dark/50 hover:text-dark">×</span>
-          </span>
-        </div>
+      {/* Product title */}
+      <div className="text-right">
+        <h1 className="text-3xl font-black leading-tight tracking-tight text-dark sm:text-4xl">{name}</h1>
       </div>
 
       {/* Price & Status */}
