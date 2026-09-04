@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type BuyBoxProps = {
   productId: string;
@@ -9,6 +10,7 @@ type BuyBoxProps = {
   status: "In Stock" | "Pre-orders Open" | "Out of Stock" | "Sold Out" | string;
   tag: string;
   preorderPeriod?: string;
+  initialInWishlist?: boolean;
 };
 
 export default function ProductBuyBox({
@@ -18,10 +20,13 @@ export default function ProductBuyBox({
   status,
   tag,
   preorderPeriod,
+  initialInWishlist = false,
 }: BuyBoxProps) {
-  const [inWishlist, setInWishlist] = useState(false);
+  const router = useRouter();
+  const [inWishlist, setInWishlist] = useState(initialInWishlist);
   const [added, setAdded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [wishlistUpdating, setWishlistUpdating] = useState(false);
 
   const handleCartClick = async () => {
     if (isOutOfStock) return;
@@ -38,24 +43,46 @@ export default function ProductBuyBox({
       return;
     }
     setAdded(true);
+    window.dispatchEvent(new CustomEvent('cart-updated'));
     setTimeout(() => setAdded(false), 2000);
   };
 
   const handleWishlistToggle = async () => {
+    if (wishlistUpdating) return;
+
     setError(null);
-    const response = inWishlist
-      ? await fetch(`/api/wishlist/${productId}`, { method: 'DELETE' })
-      : await fetch('/api/wishlist', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId }),
-        });
-    const data = await response.json();
-    if (!response.ok) {
-      setError(data.error ?? 'Unable to update your wishlist.');
-      return;
+    setWishlistUpdating(true);
+
+    try {
+      const response = inWishlist
+        ? await fetch(`/api/wishlist/${productId}`, { method: 'DELETE' })
+        : await fetch('/api/wishlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId }),
+          });
+      const data = await response.json();
+
+      if (response.status === 401) {
+        router.push('/login');
+        return;
+      }
+
+      if (!response.ok) {
+        setError(data.error ?? 'Unable to update your wishlist.');
+        return;
+      }
+
+      const wasInWishlist = inWishlist;
+      setInWishlist(!wasInWishlist);
+      window.dispatchEvent(new CustomEvent('wishlist-updated', {
+        detail: { delta: wasInWishlist ? -1 : 1 },
+      }));
+    } catch {
+      setError('Unable to reach the wishlist service. Please try again.');
+    } finally {
+      setWishlistUpdating(false);
     }
-    setInWishlist((prev) => !prev);
   };
 
   // Status Helper Flags
@@ -125,16 +152,17 @@ export default function ProductBuyBox({
         <button
           type="button"
           onClick={handleWishlistToggle}
+          disabled={wishlistUpdating}
           className={`w-full rounded-full border border-dark/30 py-3 text-xs font-extrabold transition-all active:scale-95 shadow-xs ${
             inWishlist
               ? "bg-brand text-white border-brand"
               : "bg-cream text-dark hover:bg-dark hover:text-white"
-          }`}
+          } disabled:cursor-not-allowed disabled:opacity-60`}
         >
-          {inWishlist
-            ? isOutOfStock
-              ? "Saved! We'll notify you when back in stock 🔔"
-              : "Saved to Wishlist ♥"
+          {wishlistUpdating
+            ? "Updating..."
+            : inWishlist
+            ? "Remove from Wishlist"
             : isOutOfStock
             ? "Notify Me When Restocked 🔔"
             : "Add to Wishlist"}

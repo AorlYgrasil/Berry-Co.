@@ -30,5 +30,8 @@ export async function POST(req: NextRequest) {
 
 function errorResponse(err: unknown) {
   const e = err as { status?: number; message?: string };
+  if (e.status === 401 || e.message === "UNAUTHENTICATED") {
+    return NextResponse.json({ error: "Please sign in to use your wishlist." }, { status: 401 });
+  }
   return NextResponse.json({ error: e.message ?? "Something went wrong." }, { status: e.status ?? 500 });
 }

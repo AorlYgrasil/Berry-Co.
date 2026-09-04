@@ -6,6 +6,7 @@ export interface CheckoutInput {
   shippingAddress: ShippingAddress;
   paymentMethod: string; // e.g. "card", "gcash", "cod" — left generic on purpose
   shippingFee?: number;
+  selectedCartItemIds?: string[];
 }
 
 // NOTE ON MONEY MATH: this uses plain `number` for totals, which is fine for
@@ -47,6 +48,7 @@ export async function checkout(input: CheckoutInput) {
     p_shipping_address: input.shippingAddress,
     p_payment_method: input.paymentMethod,
     p_shipping_fee: input.shippingFee ?? 0,
+    p_selected_item_ids: input.selectedCartItemIds ?? null,
   })
 
   if (error || !result) throw new Error(error?.message ?? 'Unable to create order.')

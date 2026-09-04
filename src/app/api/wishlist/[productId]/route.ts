@@ -11,6 +11,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ success: true });
   } catch (err) {
     const e = err as { status?: number; message?: string };
+    if (e.status === 401 || e.message === "UNAUTHENTICATED") {
+      return NextResponse.json({ error: "Please sign in to use your wishlist." }, { status: 401 });
+    }
     return NextResponse.json({ error: e.message ?? "Something went wrong." }, { status: e.status ?? 500 });
   }
 }

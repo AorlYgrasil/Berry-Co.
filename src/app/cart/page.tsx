@@ -14,6 +14,7 @@ interface CartItem {
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,13 +22,16 @@ export default function CartPage() {
     const response = await fetch('/api/cart');
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? 'Unable to load your cart.');
-    setCart((data.items ?? []).map((item: { id: string; quantity: number; unit_price_snapshot: number; product: { name: string; image_url: string | null } | null }) => ({
+    const nextCart: CartItem[] = (data.items ?? []).map((item: { id: string; quantity: number; unit_price_snapshot: number; product: { name: string; image_url: string | null } | null }) => ({
       id: item.id,
       name: item.product?.name ?? 'Product unavailable',
       price: Number(item.unit_price_snapshot),
       quantity: item.quantity,
       image_url: item.product?.image_url ?? null,
-    })));
+    }));
+    setCart(nextCart);
+    setSelectedItemIds((current) => current.filter((id) => nextCart.some((item) => item.id === id)));
+    window.dispatchEvent(new CustomEvent('cart-updated'));
   };
 
   useEffect(() => {
@@ -38,13 +42,15 @@ export default function CartPage() {
         return data;
       })
       .then((data) => {
-        setCart((data.items ?? []).map((item: { id: string; quantity: number; unit_price_snapshot: number; product: { name: string; image_url: string | null } | null }) => ({
+        const nextCart: CartItem[] = (data.items ?? []).map((item: { id: string; quantity: number; unit_price_snapshot: number; product: { name: string; image_url: string | null } | null }) => ({
           id: item.id,
           name: item.product?.name ?? 'Product unavailable',
           price: Number(item.unit_price_snapshot),
           quantity: item.quantity,
           image_url: item.product?.image_url ?? null,
-        })));
+        }));
+        setCart(nextCart);
+        setSelectedItemIds(nextCart.map((item) => item.id));
       })
       .catch((loadError: Error) => setError(loadError.message))
       .finally(() => setLoading(false));
@@ -64,9 +70,13 @@ export default function CartPage() {
       .catch((removeError: Error) => setError(removeError.message));
   };
 
-  const subtotal = cart.reduce<number>((acc, item) => acc + item.price * item.quantity, 0);
+  const selectedItems = cart.filter((item) => selectedItemIds.includes(item.id));
+  const subtotal = selectedItems.reduce<number>((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal > 0 ? 15 : 0;
   const total = subtotal + shipping;
+  const checkoutHref = selectedItems.length > 0
+    ? `/checkout?items=${selectedItemIds.join(',')}`
+    : '#';
 
   return (
     <main className="max-w-7xl w-full mx-auto p-6 space-y-6">
@@ -92,6 +102,15 @@ export default function CartPage() {
                 className="flex items-center justify-between bg-[#F3E4C8]/50 border border-dark/10 rounded-2xl p-4 gap-4"
               >
                 <div className="flex items-center gap-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedItemIds.includes(item.id)}
+                    onChange={() => setSelectedItemIds((current) => current.includes(item.id)
+                      ? current.filter((id) => id !== item.id)
+                      : [...current, item.id])}
+                    aria-label={`Select ${item.name} for checkout`}
+                    className="h-5 w-5 accent-brand"
+                  />
                   <div className="w-16 h-16 bg-[#F3E4C8] rounded-xl flex items-center justify-center text-[10px] text-dark/60 font-bold overflow-hidden">
                     {item.image_url ? <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" /> : 'Image'}
                   </div>
@@ -146,14 +165,18 @@ export default function CartPage() {
           </div>
 
           <Link
-            href={cart.length > 0 ? '/checkout' : '#'}
+            href={checkoutHref}
             className={`w-full block text-center font-bold py-3 rounded-full text-xs transition ${
-              cart.length > 0
+              selectedItems.length > 0
                 ? 'bg-[#E23B2E] hover:bg-brand-dark text-white shadow-sm'
                 : 'bg-stone-300 text-stone-500 cursor-not-allowed'
             }`}
+            aria-disabled={selectedItems.length === 0}
+            onClick={(event) => {
+              if (selectedItems.length === 0) event.preventDefault();
+            }}
           >
-            Proceed to Checkout
+            {selectedItems.length > 0 ? `Checkout ${selectedItems.length} selected item${selectedItems.length === 1 ? '' : 's'}` : 'Select items to checkout'}
           </Link>
         </aside>
       </div>

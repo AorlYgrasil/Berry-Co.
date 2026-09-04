@@ -4,6 +4,8 @@ import ProductGallery from "@/components/products/product-gallery";
 import ProductAccordions from "@/components/products/product-accordion";
 import ProductBuyBox from "@/components/products/product-buy-box";
 import { getProductById } from "@/lib/data/data-products";
+import { isProductWishlisted } from "@/lib/wishlist-service";
+import { getSession } from "@/lib/session";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -13,6 +15,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
   const product = await getProductById(id);
   if (!product) notFound();
+  const session = await getSession();
+  const initialInWishlist = session ? await isProductWishlisted(session.userId, product.id) : false;
 
   const status = product.status === 'out_of_stock' ? 'Out of Stock' : 'In Stock';
   const productDescription =
@@ -78,6 +82,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
               price={`₱${Number(product.price).toLocaleString('en-PH')}`}
               status={status}
               tag={product.category_name ?? 'Berry Co.'}
+              initialInWishlist={initialInWishlist}
             />
           </div>
 

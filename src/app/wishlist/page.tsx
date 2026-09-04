@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getWishlistForUser } from '@/lib/data/storefront'
+import { getCustomerCart, getWishlistForUser } from '@/lib/data/storefront'
+import WishlistItemActions from '@/components/storefront/wishlist-item-actions'
+import WishlistCartAction from '@/components/storefront/wishlist-cart-action'
 
 export default async function WishlistPage() {
   const supabase = await createClient()
@@ -11,7 +13,11 @@ export default async function WishlistPage() {
 
   if (!user) redirect('/login')
 
-  const items = await getWishlistForUser(user.id)
+  const [items, cart] = await Promise.all([
+    getWishlistForUser(user.id),
+    getCustomerCart(user.id),
+  ])
+  const cartProductIds = new Set(cart.items.map((item) => item.product_id))
 
   return (
     <main className="page-shell">
@@ -39,8 +45,16 @@ export default async function WishlistPage() {
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {items.map((item) => (
               <article key={item.id} className="rounded-[2rem] border border-dark/10 bg-highlights p-4 shadow-sm">
-                <div className="flex h-52 items-center justify-center rounded-[1.5rem] bg-cream text-xs font-black uppercase tracking-[0.2em] text-dark/40">
-                  {item.image_url ? 'Image' : 'Product'}
+                <div className="flex h-52 items-center justify-center overflow-hidden rounded-[1.5rem] bg-cream text-xs font-black uppercase tracking-[0.2em] text-dark/40">
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.product_name}
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    'No product image available'
+                  )}
                 </div>
                 <div className="mt-4 space-y-3">
                   <div>
@@ -48,13 +62,12 @@ export default async function WishlistPage() {
                     <h2 className="text-xl font-black text-dark">{item.product_name}</h2>
                   </div>
                   <p className="text-xl font-black text-dark">₱{item.price.toLocaleString('en-PH')}</p>
-                  <div className="flex gap-3">
-                    <Link href={`/products/${item.product_id}`} className="flex-1 rounded-full bg-brand px-4 py-3 text-center text-sm font-black text-white hover:bg-brand-dark">
-                      View item
-                    </Link>
-                    <Link href={`/products/${item.product_id}`} className="flex-1 rounded-full border border-dark/20 bg-paper px-4 py-3 text-center text-sm font-black text-dark hover:border-brand hover:text-brand">
-                      Add to cart
-                    </Link>
+                  <div className="flex items-stretch gap-3">
+                    <WishlistItemActions productId={item.product_id} />
+                    <WishlistCartAction
+                      productId={item.product_id}
+                      initialInCart={cartProductIds.has(item.product_id)}
+                    />
                   </div>
                 </div>
               </article>

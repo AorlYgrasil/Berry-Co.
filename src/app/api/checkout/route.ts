@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
       shippingAddress: body.shippingAddress,
       paymentMethod: body.paymentMethod,
       shippingFee: body.shippingFee,
+      selectedCartItemIds: body.selectedCartItemIds,
     });
 
     // Order now shows up immediately in the admin dashboard's

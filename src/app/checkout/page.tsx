@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCustomerCart } from '@/lib/data/storefront'
 import CheckoutForm from '@/components/storefront/checkout-form'
 
-export default async function CheckoutPage() {
+export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ items?: string }> }) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -12,7 +12,12 @@ export default async function CheckoutPage() {
 
   if (!user) redirect('/login')
 
-  const cart = await getCustomerCart(user.id)
+  const fullCart = await getCustomerCart(user.id)
+  const selectedIds = (await searchParams).items?.split(',').filter(Boolean)
+  const cart = selectedIds?.length
+    ? { ...fullCart, items: fullCart.items.filter((item) => selectedIds.includes(item.id)) }
+    : fullCart
+  const selectedCart = { ...cart, itemCount: cart.items.length }
 
   return (
     <main className="page-shell">
@@ -22,7 +27,7 @@ export default async function CheckoutPage() {
           <h1 className="mt-2 text-4xl font-black text-dark">Complete your order</h1>
         </div>
 
-        {cart.itemCount === 0 ? (
+        {selectedCart.itemCount === 0 ? (
           <div className="content-panel flex min-h-[22rem] items-center justify-center text-center">
             <div className="space-y-5">
               <p className="text-sm font-semibold text-dark/70">Your cart is empty.</p>
@@ -32,7 +37,11 @@ export default async function CheckoutPage() {
             </div>
           </div>
         ) : (
-          <CheckoutForm cart={cart} userEmail={user.email ?? 'customer@berryco.test'} />
+          <CheckoutForm
+            cart={selectedCart}
+            selectedCartItemIds={selectedIds}
+            userEmail={user.email ?? 'customer@berryco.test'}
+          />
         )}
       </div>
     </main>

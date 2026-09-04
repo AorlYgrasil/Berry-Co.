@@ -15,9 +15,11 @@ interface CartItem {
 
 export default function CheckoutForm({
   cart,
+  selectedCartItemIds,
   userEmail,
 }: {
   cart: { items: CartItem[]; subtotal: number; itemCount: number }
+  selectedCartItemIds?: string[]
   userEmail: string
 }) {
   const router = useRouter()
@@ -58,6 +60,7 @@ export default function CheckoutForm({
         },
         paymentMethod: form.paymentMethod,
         shippingFee: shipping,
+        selectedCartItemIds,
       }
 
       const response = await fetch('/api/checkout', {
@@ -72,6 +75,7 @@ export default function CheckoutForm({
         throw new Error(data.error || 'Checkout failed.')
       }
 
+      window.dispatchEvent(new CustomEvent('cart-updated', { detail: { count: 0 } }))
       router.push('/orders')
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Checkout failed.')
@@ -190,7 +194,15 @@ export default function CheckoutForm({
           {cart.items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-dark/10 bg-paper px-3 py-2">
               <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-cream text-[10px] font-black text-dark/60">
-                {item.image_url ? 'IMG' : 'ITEM'}
+                {item.image_url ? (
+                  <img
+                    src={item.image_url}
+                    alt={item.product_name}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  'ITEM'
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-dark">{item.product_name}</p>

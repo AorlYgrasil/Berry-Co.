@@ -1,12 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import { getCart } from "@/lib/cart-service";
+import { getWishlist } from "@/lib/wishlist-service";
+import WishlistNavLink from "./wishlist-nav-link";
+import CartNavLink from "./cart-nav-link";
 
 export default async function Navbar() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const wishlistItems = user ? await getWishlist(user.id) : [];
+  const cart = user ? await getCart({ userId: user.id }) : null;
 
   return (
     <header className="w-full bg-highlights border-b border-dark/10 py-4 px-6 shadow-sm">
@@ -28,14 +34,10 @@ export default async function Navbar() {
           <Link href="/products" className="hover:text-brand transition">
             Products
           </Link>
-          <Link href="/cart" className="hover:text-brand transition">
-            Cart
-          </Link>
+          <CartNavLink initialCount={cart?.itemCount ?? 0} />
           {user ? (
             <>
-              <Link href="/wishlist" className="hover:text-brand transition">
-                Wishlist
-              </Link>
+              <WishlistNavLink initialCount={wishlistItems.length} />
               <Link href="/orders" className="hover:text-brand transition">
                 Orders
               </Link>
