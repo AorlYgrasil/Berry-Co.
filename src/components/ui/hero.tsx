@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Hero() {
   const cards = [
@@ -74,7 +73,7 @@ export default function Hero() {
     >
       <div className="max-w-6xl mx-auto relative flex items-center justify-center">
         {/* Carousel Viewport */}
-        <div className="w-full overflow-hidden px-1 py-2" aria-live="polite">
+        <div className="w-full overflow-hidden px-1 py-2">
           {/* Sliding Track */}
           <div
             className="flex gap-6 transition-transform duration-500 ease-out"
@@ -107,7 +106,9 @@ export default function Hero() {
           aria-label="Previous Slide"
           className="absolute -left-2 md:left-2 top-1/2 -translate-y-1/2 bg-white text-dark rounded-full p-3 shadow-lg hover:bg-highlights hover:scale-110 active:scale-95 transition z-10"
         >
-          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
 
         {/* Next Arrow Button */}
@@ -117,7 +118,9 @@ export default function Hero() {
           aria-label="Next Slide"
           className="absolute -right-2 md:right-2 top-1/2 -translate-y-1/2 bg-white text-dark rounded-full p-3 shadow-lg hover:bg-highlights hover:scale-110 active:scale-95 transition z-10"
         >
-          <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+          </svg>
         </button>
       </div>
 

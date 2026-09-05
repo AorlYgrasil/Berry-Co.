@@ -50,7 +50,6 @@ function ProductsContent() {
   const [minPrice, setMinPrice] = useState("0");
   const [maxPrice, setMaxPrice] = useState("");
   const [priceValue, setPriceValue] = useState(5000);
-  const [availability, setAvailability] = useState<string[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -103,15 +102,10 @@ function ProductsContent() {
 
       const price = Number(item.price) || 0;
       const matchesPrice = price >= min && price <= max;
-      const matchesAvailability = availability.length === 0 || availability.some((value) => {
-        if (value === "in_stock") return item.status === "active";
-        if (value === "pre_order") return item.status === "pre_order";
-        return item.status === "on_sale";
-      });
 
-      return matchesQuery && matchesCategory && matchesSeries && matchesPrice && matchesAvailability;
+      return matchesQuery && matchesCategory && matchesSeries && matchesPrice;
     });
-  }, [products, query, selectedCategory, selectedSeries, minPrice, maxPrice, availability]);
+  }, [products, query, selectedCategory, selectedSeries, minPrice, maxPrice]);
 
   const removeTag = (tag: string) => {
     setSelectedTags((current) => current.filter((value) => value !== tag));
@@ -142,7 +136,6 @@ function ProductsContent() {
     setMinPrice("0");
     setMaxPrice("");
     setPriceValue(5000);
-    setAvailability([]);
   };
 
   return (
@@ -241,8 +234,6 @@ function ProductsContent() {
                 <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark">
                   <input
                     type="checkbox"
-                    checked={availability.includes("in_stock")}
-                    onChange={() => setAvailability((current) => current.includes("in_stock") ? current.filter((value) => value !== "in_stock") : [...current, "in_stock"])}
                     className="rounded border-dark text-brand focus:ring-0"
                   />
                   In-Stock
@@ -250,8 +241,6 @@ function ProductsContent() {
                 <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark">
                   <input
                     type="checkbox"
-                    checked={availability.includes("pre_order")}
-                    onChange={() => setAvailability((current) => current.includes("pre_order") ? current.filter((value) => value !== "pre_order") : [...current, "pre_order"])}
                     className="rounded border-dark text-brand focus:ring-0"
                   />
                   Pre-Order
@@ -259,8 +248,6 @@ function ProductsContent() {
                 <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark">
                   <input
                     type="checkbox"
-                    checked={availability.includes("on_sale")}
-                    onChange={() => setAvailability((current) => current.includes("on_sale") ? current.filter((value) => value !== "on_sale") : [...current, "on_sale"])}
                     className="rounded border-dark text-brand focus:ring-0"
                   />
                   On Sale

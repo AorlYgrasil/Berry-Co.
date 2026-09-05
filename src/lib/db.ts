@@ -24,7 +24,9 @@ import { randomUUID } from "crypto";
 //      function is the standard approach, since supabase-js doesn't
 //      support multi-statement client-side transactions).
 //
-// Data resets on every server restart — expected for a stand-in.
+// Data resets on every server restart — expected for a stand-in,
+// not a bug. Seed data below gives you something to test cart/
+// wishlist/checkout against without waiting on the DB.
 // ============================================================
 
 export type Availability = "IN_STOCK" | "ON_SALE" | "PRE_ORDER" | "OUT_OF_STOCK";
@@ -104,8 +106,53 @@ export interface Order {
   items: OrderItem[];
 }
 
-// Products are intentionally empty until the Supabase catalog is connected.
-const products: Product[] = [];
+// ------------------------------------------------------------
+// Seed data — replace with real rows once product data is pulled
+// from src/lib/data/data-products.ts / Supabase. Enough here to
+// exercise every availability branch in cart-service.ts.
+// ------------------------------------------------------------
+const products: Product[] = [
+  {
+    id: "prod_booster_box",
+    name: "Deckdrop Starter Booster Box",
+    price: 120,
+    stockQty: 12,
+    availability: "IN_STOCK",
+    isActive: true,
+    preOrderStart: null,
+    preOrderEnd: null,
+  },
+  {
+    id: "prod_sale_sleeve",
+    name: "Holo Sleeve Pack (50ct)",
+    price: 15,
+    stockQty: 40,
+    availability: "ON_SALE",
+    isActive: true,
+    preOrderStart: null,
+    preOrderEnd: null,
+  },
+  {
+    id: "prod_preorder_set",
+    name: "Next Set Pre-Order Bundle",
+    price: 89.99,
+    stockQty: 0,
+    availability: "PRE_ORDER",
+    isActive: true,
+    preOrderStart: new Date("2026-04-28T00:00:00+09:00"),
+    preOrderEnd: new Date("2026-06-10T23:59:59+09:00"),
+  },
+  {
+    id: "prod_sold_out",
+    name: "Limited Playmat",
+    price: 45,
+    stockQty: 0,
+    availability: "OUT_OF_STOCK",
+    isActive: true,
+    preOrderStart: null,
+    preOrderEnd: null,
+  },
+];
 
 const carts: Cart[] = [];
 const cartItems: CartItem[] = [];

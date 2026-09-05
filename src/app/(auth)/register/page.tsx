@@ -111,11 +111,9 @@ export default function RegisterPage() {
             <input
               type="password"
               required
-              minLength={8}
-              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder="••••••••"
               className="w-full bg-[#F3E4C8] border border-[#35322E]/30 rounded-xl px-3 py-2.5 text-sm text-[#35322E] focus:outline-none focus:border-[#E23B2E] transition font-medium"
             />
           </div>
@@ -125,11 +123,9 @@ export default function RegisterPage() {
             <input
               type="password"
               required
-              minLength={8}
-              autoComplete="new-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repeat your password"
+              placeholder="••••••••"
               className="w-full bg-[#F3E4C8] border border-[#35322E]/30 rounded-xl px-3 py-2.5 text-sm text-[#35322E] focus:outline-none focus:border-[#E23B2E] transition font-medium"
             />
           </div>

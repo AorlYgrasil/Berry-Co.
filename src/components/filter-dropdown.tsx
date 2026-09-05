@@ -91,27 +91,7 @@ export default function FilterDropdown({
           )}
         </div>
 
-        <div className="max-h-40 space-y-2 overflow-y-auto rounded-2xl border border-dark/10 bg-white p-3">
-          {availableOptions.length === 0 ? (
-            <p className="text-xs font-semibold text-dark/50">
-              {searchValue ? "No matching options" : "No more options"}
-            </p>
-          ) : (
-            availableOptions.map((option) => (
-              <label key={option} className="flex cursor-pointer items-center gap-2 text-xs font-bold text-dark">
-                <input
-                  type="checkbox"
-                  checked={selectedValues.includes(option)}
-                  onChange={() => handleAdd(option)}
-                  className="h-4 w-4 rounded border-dark/40 text-brand focus:ring-brand"
-                />
-                {option}
-              </label>
-            ))
-          )}
-        </div>
-
-        {/* Keyboard-friendly select for desktop users. */}
+        {/* 🔽 Filtered Dropdown */}
         <select
           value=""
           onChange={(e) => handleAdd(e.target.value)}
