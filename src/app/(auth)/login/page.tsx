@@ -20,7 +20,7 @@ export default function LoginPage() {
     setErrorMsg('');
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim().toLowerCase(),
       password,
     });
 
@@ -79,7 +79,8 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              autoComplete="current-password"
+              placeholder="Enter your password"
               className="w-full bg-[#F3E4C8] border border-[#35322E]/30 rounded-xl px-4 py-2.5 text-sm text-[#35322E] outline-none focus:border-[#E23B2E] transition font-medium"
             />
           </div>

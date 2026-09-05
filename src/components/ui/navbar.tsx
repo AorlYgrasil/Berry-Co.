@@ -7,6 +7,7 @@ import { getOrderCountForUser } from "@/lib/data/storefront";
 import WishlistNavLink from "./wishlist-nav-link";
 import CartNavLink from "./cart-nav-link";
 import OrdersNavLink from "./orders-nav-link";
+import MobileNav from "./mobile-nav";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -33,7 +34,7 @@ export default async function Navbar() {
           />
           Berry Co.
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-bold text-dark">
+        <nav className="hidden items-center gap-6 text-sm font-bold text-dark md:flex">
           <Link href="/products" className="hover:text-brand transition">
             Products
           </Link>
@@ -52,6 +53,7 @@ export default async function Navbar() {
             </Link>
           )}
         </nav>
+        <MobileNav isSignedIn={Boolean(user)} />
       </div>
     </header>
   );
