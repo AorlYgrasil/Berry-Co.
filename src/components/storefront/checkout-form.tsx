@@ -76,6 +76,7 @@ export default function CheckoutForm({
       }
 
       window.dispatchEvent(new CustomEvent('cart-updated', { detail: { count: 0 } }))
+      window.dispatchEvent(new CustomEvent('orders-updated', { detail: { delta: 1 } }))
       router.push('/orders')
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Checkout failed.')

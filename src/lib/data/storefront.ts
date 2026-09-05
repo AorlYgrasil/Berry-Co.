@@ -22,10 +22,21 @@ export interface StorefrontOrder {
   id: string
   order_number: string
   total_amount: number
+  customer_name: string
   status: string
   payment_status: string
   created_at: string
   shipping_address: string | null
+  items: StorefrontOrderItem[]
+}
+
+export interface StorefrontOrderItem {
+  id: string
+  product_id: string | null
+  product_name: string
+  quantity: number
+  price: number
+  image_url: string | null
 }
 
 export async function getCustomerCart(userId: string) {
@@ -146,11 +157,69 @@ export async function getOrdersForUser(userId: string) {
     .from('orders')
     .select('*')
     .eq('customer_id', userId)
+    .neq('status', 'cancelled')
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
 
-  return (data ?? []) as StorefrontOrder[]
+  const orders = data ?? []
+  if (orders.length === 0) return [] as StorefrontOrder[]
+
+  const orderIds = orders.map((order) => order.id)
+  const { data: orderItems, error: itemsError } = await supabase
+    .from('order_items')
+    .select('id, order_id, product_id, product_name, quantity, price')
+    .in('order_id', orderIds)
+
+  if (itemsError) throw new Error(itemsError.message)
+
+  const productIds = Array.from(new Set((orderItems ?? [])
+    .map((item) => item.product_id)
+    .filter((id): id is string => Boolean(id))))
+  const productMap = new Map<string, string | null>()
+
+  if (productIds.length > 0) {
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, image_url')
+      .in('id', productIds)
+
+    if (productsError) throw new Error(productsError.message)
+    for (const product of products ?? []) productMap.set(product.id, product.image_url)
+  }
+
+  const itemsByOrder = new Map<string, StorefrontOrderItem[]>()
+  for (const item of orderItems ?? []) {
+    const orderItem: StorefrontOrderItem = {
+      id: item.id,
+      product_id: item.product_id,
+      product_name: item.product_name,
+      quantity: item.quantity,
+      price: Number(item.price),
+      image_url: item.product_id ? productMap.get(item.product_id) ?? null : null,
+    }
+    const currentItems = itemsByOrder.get(item.order_id) ?? []
+    currentItems.push(orderItem)
+    itemsByOrder.set(item.order_id, currentItems)
+  }
+
+  return orders.map((order) => ({
+    ...order,
+    total_amount: Number(order.total_amount),
+    items: itemsByOrder.get(order.id) ?? [],
+  })) as StorefrontOrder[]
+}
+
+export async function getOrderCountForUser(userId: string) {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from('orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('customer_id', userId)
+    .neq('status', 'cancelled')
+
+  if (error) throw new Error(error.message)
+  return count ?? 0
 }
 
 export async function getOrderByIdForUser(userId: string, orderId: string) {
@@ -173,13 +242,30 @@ export async function getOrderByIdForUser(userId: string, orderId: string) {
 
   if (itemsError) throw new Error(itemsError.message)
 
+  const productIds = Array.from(new Set((items ?? [])
+    .map((item) => item.product_id)
+    .filter((id): id is string => Boolean(id))))
+  const productMap = new Map<string, string | null>()
+
+  if (productIds.length > 0) {
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id, image_url')
+      .in('id', productIds)
+
+    if (productsError) throw new Error(productsError.message)
+    for (const product of products ?? []) productMap.set(product.id, product.image_url)
+  }
+
   return {
     order: order as StorefrontOrder,
     items: (items ?? []).map((item) => ({
       id: item.id,
+      product_id: item.product_id,
       product_name: item.product_name,
       quantity: item.quantity,
       price: Number(item.price),
+      image_url: item.product_id ? productMap.get(item.product_id) ?? null : null,
     })),
   }
 }

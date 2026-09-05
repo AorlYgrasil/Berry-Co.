@@ -3,7 +3,11 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getOrdersForUser } from '@/lib/data/storefront'
 
-export default async function OrdersPage() {
+export default async function OrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cancelled?: string }>
+}) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -12,6 +16,7 @@ export default async function OrdersPage() {
   if (!user) redirect('/login')
 
   const orders = await getOrdersForUser(user.id)
+  const wasCancelled = (await searchParams).cancelled === '1'
 
   return (
     <main className="page-shell">
@@ -20,6 +25,12 @@ export default async function OrdersPage() {
           <p className="text-xs font-black uppercase tracking-[0.2em] text-brand">Account</p>
           <h1 className="mt-2 text-4xl font-black text-dark">Order history</h1>
         </div>
+
+        {wasCancelled && (
+          <div className="mb-5 rounded-2xl border border-emerald-600/30 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700" role="status">
+            Order cancelled successfully. It has been removed from your order history.
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <div className="content-panel flex min-h-[18rem] items-center justify-center text-center">
@@ -55,6 +66,26 @@ export default async function OrdersPage() {
                     <p className="text-xs font-semibold uppercase tracking-[0.15em] text-dark/50">Total</p>
                     <p className="text-2xl font-black text-dark">₱{Number(order.total_amount).toLocaleString('en-PH')}</p>
                   </div>
+                </div>
+
+                <div className="mt-5 space-y-2 border-t border-dark/10 pt-4">
+                  <p className="text-xs font-black uppercase tracking-[0.15em] text-dark/50">Ordered items</p>
+                  {order.items.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-dark/10 bg-paper px-3 py-2">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-cream text-[9px] font-black text-dark/50">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.product_name} className="h-full w-full object-contain" />
+                        ) : (
+                          'ITEM'
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-black text-dark">{item.product_name}</p>
+                        <p className="text-xs font-semibold text-dark/60">Qty {item.quantity}</p>
+                      </div>
+                      <p className="text-sm font-black text-dark">₱{(item.price * item.quantity).toLocaleString('en-PH')}</p>
+                    </div>
+                  ))}
                 </div>
               </Link>
             ))}
