@@ -34,6 +34,9 @@ export interface Product {
   stock: number
   low_stock_threshold: number
   category_id: string | null
+  brand_id: string | null // Added
+  series_id: string | null // Added
+  tags: string[] | null // Added
   description: string | null
   image_url: string | null
   created_at: string
@@ -47,6 +50,8 @@ export type ProductStatus = 'active' | 'out_of_stock' | 'low_stock'
 export interface ProductWithCategory extends Product {
   category_name: string | null
   subcategory_name: string | null
+  brand_name: string | null // Added
+  series_name: string | null // Added
   status: ProductStatus
 }
 

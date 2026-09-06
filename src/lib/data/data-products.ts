@@ -5,45 +5,43 @@ export interface CategoryNode extends Category {
   children: CategoryNode[]
 }
 
-/** ProductStatus isn't stored — derive it from stock so it can never drift. */
 export function deriveProductStatus(stock: number, lowStockThreshold: number): ProductStatus {
   if (stock <= 0) return 'out_of_stock'
   if (stock <= lowStockThreshold) return 'low_stock'
   return 'active'
 }
 
-
+// 1. Update mapper to extract joined brand/series names and flatten tags
 function toProductWithCategory(
-  product: Product,
+  product: any, // Using 'any' here temporarily to handle the joined Supabase format
   categoriesById: Map<string, Category>
 ): ProductWithCategory {
-  // product.category_id points at a level-2 "product type" leaf. Walk up
-  // the tree to get the level-1 subcategory and level-0 category names.
   const leaf = product.category_id ? categoriesById.get(product.category_id) : undefined
   const sub = leaf?.parent_id ? categoriesById.get(leaf.parent_id) : undefined
   const top = sub?.parent_id ? categoriesById.get(sub.parent_id) : undefined
 
+  // Remove the nested joined objects so they don't pollute the final object
+  const { brands, series, product_tags, ...restProduct } = product;
+
   return {
-    ...product,
+    ...restProduct,
     category_name: top?.name ?? sub?.name ?? null,
     subcategory_name: sub?.name ?? leaf?.name ?? null,
+    brand_name: brands?.name ?? null,   
+    series_name: series?.name ?? null,  
+    // Map the junction table records into a flat array of strings
+    tags: product_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) ?? [],
     status: deriveProductStatus(product.stock, product.low_stock_threshold),
   }
 }
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('level')
-    .order('name')
-
+  const { data, error } = await supabase.from('categories').select('*').order('level').order('name')
   if (error || !data) return []
   return data as Category[]
 }
 
-/** Turns the flat categories table into a 3-level tree for cascading selects. */
 export function buildCategoryTree(flat: Category[]): CategoryNode[] {
   const byId = new Map<string, CategoryNode>()
   flat.forEach((c) => byId.set(c.id, { ...c, children: [] }))
@@ -56,7 +54,6 @@ export function buildCategoryTree(flat: Category[]): CategoryNode[] {
       roots.push(node)
     }
   })
-
   return roots
 }
 
@@ -72,12 +69,10 @@ export async function getProducts(
   const { search, categoryId, status, page = 1, pageSize = 20 } = params
   const supabase = await createClient()
 
-  // Status is derived, not a DB column, so it can't be filtered in SQL.
-  // Fetch everything matching search/category (capped at 500 — plenty for
-  // an admin catalog), then filter + paginate here.
+  // 2. Expand .select() to join brands, series, and tags via the junction table
   let query = supabase
     .from('products')
-    .select('*')
+    .select('*, brands(name), series(name), product_tags(tags(name))')
     .order('created_at', { ascending: false })
     .limit(500)
 
@@ -89,7 +84,7 @@ export async function getProducts(
   if (error || !data) return { products: [], count: 0 }
 
   const categoriesById = new Map(categories.map((c) => [c.id, c]))
-  let products = (data as Product[]).map((p) => toProductWithCategory(p, categoriesById))
+  let products = data.map((p) => toProductWithCategory(p, categoriesById))
 
   if (status) products = products.filter((p) => p.status === status)
 
@@ -104,12 +99,17 @@ export async function getProductById(id: string): Promise<ProductWithCategory | 
   const supabase = await createClient()
 
   const [{ data, error }, categories] = await Promise.all([
-    supabase.from('products').select('*').eq('id', id).single(),
+    // 3. Expand .select() here as well
+    supabase
+      .from('products')
+      .select('*, brands(name), series(name), product_tags(tags(name))')
+      .eq('id', id)
+      .single(),
     getCategories(),
   ])
 
   if (error || !data) return null
 
   const categoriesById = new Map(categories.map((c) => [c.id, c]))
-  return toProductWithCategory(data as Product, categoriesById)
+  return toProductWithCategory(data, categoriesById)
 }

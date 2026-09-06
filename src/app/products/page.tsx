@@ -7,11 +7,6 @@ import ItemCard from "@/components/item-card";
 import FilterDropdown from "@/components/filter-dropdown";
 import PriceRangeSlider from "@/components/price-range-slider";
 
-const categoryOptions = ["Cards", "Figurines", "Accessories"];
-const seriesOptions = ["Pokemon", "Magic The Gathering", "Yu-Gi-Oh"];
-const availableTags = ["New", "Limited", "Popular", "Featured", "Exclusive", "Pre-Order", "Sale"];
-const brandOptions = ["Deckdrop", "Studio", "Guest"];
-
 type CatalogProduct = {
   id: string;
   name: string;
@@ -20,6 +15,9 @@ type CatalogProduct = {
   image_url: string | null;
   description: string | null;
   category_name: string | null;
+  brand_name: string | null;
+  series_name: string | null;
+  tags: string[] | null;
   status: string;
 };
 
@@ -50,7 +48,16 @@ function ProductsContent() {
   const [minPrice, setMinPrice] = useState("0");
   const [maxPrice, setMaxPrice] = useState("");
   const [priceValue, setPriceValue] = useState(5000);
+  
+  // Dynamic State for API Data
   const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [filterOptions, setFilterOptions] = useState({
+    categories: [] as string[],
+    brands: [] as string[],
+    series: [] as string[],
+    tags: [] as string[],
+  });
+  
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -64,8 +71,11 @@ function ProductsContent() {
         if (!response.ok) throw new Error('Unable to load products.')
         return response.json()
       })
-      .then((result: { products?: CatalogProduct[] }) => {
-        if (!cancelled) setProducts(result.products ?? [])
+      .then((result: { products?: CatalogProduct[], filterOptions?: any }) => {
+        if (!cancelled) {
+          setProducts(result.products ?? []);
+          if (result.filterOptions) setFilterOptions(result.filterOptions);
+        }
       })
       .catch((error: Error) => {
         if (!cancelled) setLoadError(error.message)
@@ -88,6 +98,7 @@ function ProductsContent() {
     const min = Number(minPrice) || 0;
     const max = maxPrice === "" ? Infinity : Number(maxPrice) || Infinity;
     const queryLower = query.trim().toLowerCase();
+    
     return products.filter((item) => {
       const label = `${item.name} ${item.description ?? ''} ${item.sku} ${item.category_name ?? ''}`.toLowerCase();
       const matchesQuery = queryLower === "" || label.includes(queryLower);
@@ -98,14 +109,24 @@ function ProductsContent() {
 
       const matchesSeries =
         selectedSeries.length === 0 ||
-        selectedSeries.some((series) => item.name.toLowerCase().includes(series.toLowerCase()));
+        selectedSeries.some((series) => item.series_name?.toLowerCase() === series.toLowerCase());
+
+      const matchesBrand =
+        selectedBrand.length === 0 ||
+        selectedBrand.some((brand) => item.brand_name?.toLowerCase() === brand.toLowerCase());
+
+      const matchesTags =
+        selectedTags.length === 0 ||
+        selectedTags.some((selectedTag) => 
+          item.tags?.some((productTag) => productTag.toLowerCase() === selectedTag.toLowerCase())
+        );
 
       const price = Number(item.price) || 0;
       const matchesPrice = price >= min && price <= max;
 
-      return matchesQuery && matchesCategory && matchesSeries && matchesPrice;
+      return matchesQuery && matchesCategory && matchesSeries && matchesBrand && matchesTags && matchesPrice;
     });
-  }, [products, query, selectedCategory, selectedSeries, minPrice, maxPrice]);
+  }, [products, query, selectedCategory, selectedSeries, selectedBrand, selectedTags, minPrice, maxPrice]);
 
   const removeTag = (tag: string) => {
     setSelectedTags((current) => current.filter((value) => value !== tag));
@@ -190,7 +211,7 @@ function ProductsContent() {
             {/* 1️⃣ Category Filter */}
             <FilterDropdown
               label="Category"
-              options={[...new Set([...categoryOptions, ...products.map((product) => product.category_name).filter((value): value is string => Boolean(value))])]}
+              options={filterOptions.categories}
               searchValue={categorySearch}
               selectedValues={selectedCategory}
               onSearchChange={setCategorySearch}
@@ -200,7 +221,7 @@ function ProductsContent() {
             {/* 2️⃣ Series Filter */}
             <FilterDropdown
               label="Series"
-              options={seriesOptions}
+              options={filterOptions.series}
               searchValue={seriesSearch}
               selectedValues={selectedSeries}
               onSearchChange={setSeriesSearch}
@@ -210,7 +231,7 @@ function ProductsContent() {
             {/* 3️⃣ Tags Filter */}
             <FilterDropdown
               label="Tags"
-              options={availableTags}
+              options={filterOptions.tags}
               searchValue={tagSearch}
               selectedValues={selectedTags}
               onSearchChange={setTagSearch}
@@ -220,7 +241,7 @@ function ProductsContent() {
             {/* 4️⃣ Brand Filter */}
             <FilterDropdown
               label="Brand"
-              options={brandOptions}
+              options={filterOptions.brands}
               searchValue={brandSearch}
               selectedValues={selectedBrand}
               onSearchChange={setBrandSearch}
@@ -364,13 +385,14 @@ function ProductsContent() {
                 key={item.id}
                 item={{
                   id: item.id,
-                  company: "Berry Co.",
+                  company: item.brand_name ?? "Berry Co.",
                   name: item.name,
                   description: item.description ?? item.sku,
                   price: `₱${Number(item.price).toLocaleString('en-PH')}`,
                   imageUrl: item.image_url ?? undefined,
                   category: item.category_name ?? undefined,
                   status: item.status,
+                  tags: item.tags ?? [],
                 }}
               />
             ))}

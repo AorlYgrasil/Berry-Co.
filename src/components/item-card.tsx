@@ -19,10 +19,9 @@ export interface ItemCardProps {
 }
 
 export default function ItemCard({ item, className = "" }: ItemCardProps) {
-  // #region MOCK FALLBACK DEFAULTS (Review/remove default strings once backend supplies complete item records)
   const {
     id,
-    company = "Company Name",
+    company = "Berry Co.",
     name = "Item Name",
     description,
     price = "₱120",
@@ -31,16 +30,13 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
     tags = [],
     status,
   } = item;
-  // #endregion MOCK FALLBACK DEFAULTS
 
   const safeName = name?.trim() || "Item Name";
   const safeDescription = description?.trim() || `${safeName} from the Berry Co. collection — a premium collectible with standout detail and craftsmanship.`;
   const targetHref = href ?? (id !== undefined ? `/products/${id}` : undefined);
   
-  // Safe case-insensitive check for out-of-stock items
-  const isOutOfStock =
-    status?.toLowerCase().includes("out of stock") ||
-    status?.toLowerCase().includes("sold out");
+  // 🏷️ Updated to match the exact database derived status
+  const isOutOfStock = status === "out_of_stock";
 
   const content = (
     <article
@@ -53,18 +49,16 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
         ) : (
-          // #region MOCK IMAGE PLACEHOLDER (Replace string with official fallback logo asset or default CDN image)
           "Image Placeholder"
-          // #endregion MOCK IMAGE PLACEHOLDER
         )}
 
         {/* Tags Overlay */}
         {tags.length > 0 && (
-          <div className="absolute top-2.5 left-2.5 z-10 flex flex-wrap gap-1">
+          <div className="absolute top-2.5 left-2.5 z-10 flex flex-wrap gap-1.5 pointer-events-none">
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-brand px-2 py-0.5 text-[10px] font-bold text-white shadow-xs"
+                className="rounded-full bg-brand px-2.5 py-0.5 text-[10px] font-black text-white shadow-xs"
               >
                 {tag}
               </span>
@@ -88,7 +82,7 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
         <p className="text-sm font-black leading-snug text-dark group-hover:text-brand transition-colors">
           {safeName}
         </p>
-        <p className="text-[11px] font-semibold leading-relaxed text-dark/70">
+        <p className="text-[11px] font-semibold leading-relaxed text-dark/70 line-clamp-2">
           {safeDescription}
         </p>
         <p className="pt-1 text-sm font-extrabold text-brand">{price}</p>
