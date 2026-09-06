@@ -162,3 +162,28 @@ export async function adjustStock(id: string, delta: number) {
   revalidatePath(`/admin/products/${id}`)
   return { error: null, stock: nextStock }
 }
+
+/** Set a product's stock to an exact non-negative whole number. */
+export async function setStock(
+  id: string,
+  _prevState: ProductFormState,
+  formData: FormData
+): Promise<ProductFormState> {
+  const stock = Number(formData.get('stock'))
+
+  if (!Number.isInteger(stock) || stock < 0) {
+    return { error: 'Enter a valid stock quantity.' }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('products')
+    .update({ stock, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/products')
+  revalidatePath(`/admin/products/${id}`)
+  return { error: null }
+}

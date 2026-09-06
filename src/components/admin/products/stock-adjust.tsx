@@ -1,30 +1,27 @@
 'use client'
 
 import { useActionState } from 'react'
-import CategorySelect from './category-select'
-import type { CategoryNode } from '@/lib/data/data-products'
+import { setStock } from '@/lib/actions/action-products'
 import type { ProductWithCategory } from '@/types/database'
 
-type FormState = { error: string | null }
-
-const inputClass =
-  'w-full rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:border-[#d9483a] focus:outline-none focus:ring-2 focus:ring-[#d9483a]/20'
-
-export default function ProductForm({
-  action,
-  categories,
+export default function StockAdjust({
   product,
-  submitLabel = 'Save',
 }: {
-  action: (prevState: FormState, formData: FormData) => Promise<FormState>
-  categories: CategoryNode[]
-  product?: ProductWithCategory
-  submitLabel?: string
+  product: ProductWithCategory
 }) {
-  const [state, formAction, pending] = useActionState(action, { error: null })
+  const setProductStock = setStock.bind(null, product.id)
+  const [state, formAction, pending] = useActionState(setProductStock, { error: null })
 
   return (
-    <form action={formAction} className="max-w-2xl space-y-4">
+    <form action={formAction} className="rounded-2xl border border-stone-200 bg-white p-5">
+      <div className="mb-4 flex items-baseline justify-between gap-4">
+        <div>
+          <h2 className="text-base font-semibold text-stone-900">Stock</h2>
+          <p className="text-sm text-stone-500">Update the available quantity for this product.</p>
+        </div>
+        <span className="text-sm text-stone-500">Current: {product.stock}</span>
+      </div>
+
       {state.error && (
         <div
           role="alert"
@@ -34,129 +31,30 @@ export default function ProductForm({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Product name
+      <div className="flex max-w-sm items-end gap-3">
+        <div className="flex-1">
+          <label htmlFor="stock" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Stock quantity
           </label>
           <input
-            id="name"
-            name="name"
-            required
-            defaultValue={product?.name}
-            className={inputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="category_id" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Category
-          </label>
-          <CategorySelect
-            categories={categories}
-            defaultValue={product?.category_id ?? undefined}
-            className={inputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="sku" className="mb-1.5 block text-sm font-medium text-stone-700">
-            SKU
-          </label>
-          <input
-            id="sku"
-            name="sku"
-            defaultValue={product?.sku ?? ''}
-            placeholder={product ? undefined : 'Leave blank to auto-generate'}
-            className={inputClass}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Price (₱)
-          </label>
-          <input
-            id="price"
-            name="price"
-            type="number"
-            step="0.01"
-            min="0"
-            required
-            defaultValue={product?.price}
-            className={inputClass}
-          />
-        </div>
-
-        {!product && (
-          <div>
-            <label htmlFor="stock" className="mb-1.5 block text-sm font-medium text-stone-700">
-              Starting stock
-            </label>
-            <input
-              id="stock"
-              name="stock"
-              type="number"
-              min="0"
-              defaultValue={0}
-              className={inputClass}
-            />
-          </div>
-        )}
-
-        <div>
-          <label
-            htmlFor="low_stock_threshold"
-            className="mb-1.5 block text-sm font-medium text-stone-700"
-          >
-            Low stock alert at
-          </label>
-          <input
-            id="low_stock_threshold"
-            name="low_stock_threshold"
+            id="stock"
+            name="stock"
             type="number"
             min="0"
-            defaultValue={product?.low_stock_threshold ?? 5}
-            className={inputClass}
+            step="1"
+            required
+            defaultValue={product.stock}
+            className="w-full rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm text-stone-800 focus:border-[#d9483a] focus:outline-none focus:ring-2 focus:ring-[#d9483a]/20"
           />
         </div>
-
-        <div className="sm:col-span-2">
-          <label htmlFor="image_url" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Image URL
-          </label>
-          <input
-            id="image_url"
-            name="image_url"
-            defaultValue={product?.image_url ?? ''}
-            className={inputClass}
-          />
-        </div>
-
-        <div className="sm:col-span-2">
-          <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Description
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            rows={4}
-            defaultValue={product?.description ?? ''}
-            className={inputClass}
-          />
-        </div>
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-full bg-[#d9483a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#c23f32] disabled:opacity-70"
+        >
+          {pending ? 'Saving...' : 'Update stock'}
+        </button>
       </div>
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="flex items-center gap-2 rounded-full bg-[#d9483a] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#c23f32] disabled:opacity-70"
-      >
-        {pending && (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-        )}
-        {pending ? 'Saving…' : submitLabel}
-      </button>
     </form>
   )
 }

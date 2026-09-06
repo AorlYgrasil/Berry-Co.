@@ -25,7 +25,7 @@ export default async function EditProductPage({
         <p className="text-sm text-stone-500">SKU: {product.sku}</p>
       </div>
 
-      <StockAdjust product={product} action={boundUpdate} categories={categoryTree} />
+      <StockAdjust product={product} />
 
       <div className="rounded-2xl border border-stone-200 bg-white p-5">
         <h2 className="mb-4 text-base font-semibold text-stone-900">Product Details</h2>
