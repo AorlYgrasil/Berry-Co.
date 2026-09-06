@@ -6,6 +6,8 @@ import { getProducts } from "@/lib/data/data-products";
 export default async function HomePage() {
   const { products } = await getProducts({ page: 1, pageSize: 500 });
 
+
+  
   return (
     <div className="flex-1 flex flex-col">
       <Hero />

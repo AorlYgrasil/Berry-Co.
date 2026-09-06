@@ -1,23 +1,54 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 type SearchBarProps = {
   value?: string;
   onChange?: (val: string) => void;
 };
 
-export default function SearchBar({ value = "", onChange }: SearchBarProps) {
+export default function SearchBar({ value: externalValue, onChange }: SearchBarProps) {
+  const router = useRouter();
+  const [internalValue, setInternalValue] = useState("");
+
+  const isControlled = onChange !== undefined;
+  const currentValue = isControlled ? (externalValue ?? "") : internalValue;
+
+  const handleChange = (val: string) => {
+    if (isControlled) {
+      onChange(val);
+    } else {
+      setInternalValue(val);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const query = currentValue.trim();
+
+    if (query) {
+      router.push(`/products?search=${encodeURIComponent(query)}`);
+    } else {
+      router.push("/products");
+    }
+  };
+
   return (
-    <div className="w-full max-w-2xl mx-auto my-4 px-4">
+    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto my-4 px-4">
       <div className="relative flex items-center w-full">
         <input
           type="text"
-          value={value}
-          onChange={(e) => onChange?.(e.target.value)}
+          value={currentValue}
+          onChange={(e) => handleChange(e.target.value)}
           placeholder="Looking for something?"
           className="w-full rounded-full border border-dark/40 bg-cream py-2.5 pl-10 pr-10 text-xs font-semibold text-dark placeholder:text-dark/50 shadow-sm outline-none focus:border-dark"
         />
+        <button type="submit" className="hidden">
+          Search
+        </button>
         <svg
-          className="absolute left-3.5 h-4 w-4 text-dark/60"
+          className="absolute left-3.5 h-4 w-4 text-dark/60 pointer-events-none"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -30,6 +61,6 @@ export default function SearchBar({ value = "", onChange }: SearchBarProps) {
           />
         </svg>
       </div>
-    </div>
+    </form>
   );
 }

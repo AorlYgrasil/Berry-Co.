@@ -33,7 +33,8 @@ export default async function Navbar() {
           />
           Berry Co.
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-bold text-dark">
+
+        <nav className="hidden md:flex items-center gap-6 text-sm font-bold text-dark">
           <Link href="/products" className="hover:text-brand transition">
             Products
           </Link>
@@ -52,6 +53,64 @@ export default async function Navbar() {
             </Link>
           )}
         </nav>
+
+        <div className="dropdown dropdown-end md:hidden">
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-circle btn-ghost border-none text-dark hover:bg-brand-dark/80 focus:bg-brand-dark"
+            aria-label="Toggle menu"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </div>
+
+          <ul
+            tabIndex={0}
+            className="dropdown-content menu p-4 shadow-xl bg-cream border border-dark/10 rounded-2xl w-60 z-50 mt-2 space-y-2 text-sm font-bold text-dark"
+          >
+            <li>
+              <Link href="/products" className="hover:text-brand transition">
+                Products
+              </Link>
+            </li>
+            <li>
+              <CartNavLink initialCount={cart?.itemCount ?? 0} />
+            </li>
+            {user ? (
+              <>
+                <li>
+                  <WishlistNavLink initialCount={wishlistItems.length} />
+                </li>
+                <li>
+                  <OrdersNavLink initialCount={orderCount} />
+                </li>
+                <li>
+                  <Link href="/page" className="hover:text-brand transition">
+                    Profile
+                  </Link>
+                </li>
+              </>
+            ) : (
+              <li>
+                <Link href="/login" className="hover:text-brand transition">
+                  Login/Sign up
+                </Link>
+              </li>
+            )}
+          </ul>
+        </div>
       </div>
     </header>
   );
