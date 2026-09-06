@@ -4,6 +4,7 @@ import ProductGallery from "@/components/products/product-gallery";
 import ProductAccordions from "@/components/products/product-accordion";
 import ProductBuyBox from "@/components/products/product-buy-box";
 import { getProductById } from "@/lib/data/data-products";
+import { getProductReviews } from "@/lib/data/reviews";
 import { isProductWishlisted } from "@/lib/wishlist-service";
 import { getSession } from "@/lib/session";
 
@@ -16,6 +17,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
   const product = await getProductById(id);
   if (!product) notFound();
   const session = await getSession();
+  const reviews = await getProductReviews(product.id);
   const initialInWishlist = session ? await isProductWishlisted(session.userId, product.id) : false;
 
   const status = product.status === 'out_of_stock' ? 'Out of Stock' : 'In Stock';
@@ -88,7 +90,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 3️⃣ Accordions Card (Mobile: 3rd | Desktop: Bottom-Left) */}
           <div className="lg:col-span-8 lg:col-start-1 lg:row-start-2 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10">
-            <ProductAccordions description={productDescription} specs={[`SKU: ${product.sku}`, `Stock: ${product.stock} unit(s)`]} />
+            <ProductAccordions
+              productId={product.id}
+              canReview={Boolean(session)}
+              reviews={reviews}
+              description={productDescription}
+              specs={[`SKU: ${product.sku}`, `Stock: ${product.stock} unit(s)`]}
+            />
           </div>
 
         </div>
