@@ -5,6 +5,7 @@ export interface Item {
   company?: string;
   name?: string;
   description?: string;
+  shortDescription?: string;
   price?: string | number;
   imageUrl?: string;
   href?: string;
@@ -21,10 +22,10 @@ export interface ItemCardProps {
 export default function ItemCard({ item, className = "" }: ItemCardProps) {
   const {
     id,
-    company = "Berry Co.",
+    company,
     name = "Item Name",
-    description,
-    price = "₱120",
+    shortDescription,
+    price = "₱0",
     imageUrl,
     href,
     tags = [],
@@ -32,20 +33,20 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
   } = item;
 
   const safeName = name?.trim() || "Item Name";
-  const safeDescription = description?.trim() || `${safeName} from the Berry Co. collection — a premium collectible with standout detail and craftsmanship.`;
+  // Strictly checks shortDescription ONLY. If missing, renders nothing.
+  const cardText = shortDescription?.trim();
   const targetHref = href ?? (id !== undefined ? `/products/${id}` : undefined);
   
-  // 🏷️ Updated to match the exact database derived status
   const isOutOfStock = status === "out_of_stock";
 
   const content = (
     <article
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-dark/15 bg-paper shadow-xs transition-all duration-200 ${
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl border border-dark/15 bg-paper shadow-xs transition-all duration-200 ${
         targetHref ? "hover:-translate-y-1 hover:shadow-md cursor-pointer" : ""
       } ${className}`.trim()}
     >
       {/* Main Image Wrapper */}
-      <div className="relative flex h-52 w-full items-center justify-center bg-cream text-xs font-bold text-dark/30 overflow-hidden">
+      <div className="relative flex h-52 w-full shrink-0 items-center justify-center bg-cream text-xs font-bold text-dark/30 overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
         ) : (
@@ -76,16 +77,25 @@ export default function ItemCard({ item, className = "" }: ItemCardProps) {
         )}
       </div>
 
-      {/* Item Info */}
-      <div className="space-y-1 p-3 text-xs font-semibold text-dark">
-        <p className="font-bold text-dark/80">{company}</p>
-        <p className="text-sm font-black leading-snug text-dark group-hover:text-brand transition-colors">
-          {safeName}
-        </p>
-        <p className="text-[11px] font-semibold leading-relaxed text-dark/70 line-clamp-2">
-          {safeDescription}
-        </p>
-        <p className="pt-1 text-sm font-extrabold text-brand">{price}</p>
+      {/* Item Info Wrapper */}
+      <div className="flex flex-1 flex-col justify-between p-3 text-xs font-semibold text-dark">
+        {/* Top Content: Company, Title, Teaser */}
+        <div className="space-y-1">
+          {company && <p className="font-bold text-dark/80">{company}</p>}
+          <p className="line-clamp-2 text-sm font-black leading-snug text-dark group-hover:text-brand transition-colors">
+            {safeName}
+          </p>
+
+          {/* Rendered ONLY if shortDescription is explicitly populated */}
+          {cardText && (
+            <p className="line-clamp-2 text-[11px] font-semibold leading-relaxed text-dark/70">
+              {cardText}
+            </p>
+          )}
+        </div>
+
+        {/* Bottom Content: Price pinned to bottom */}
+        <p className="mt-3 pt-1 text-sm font-extrabold text-brand">{price}</p>
       </div>
     </article>
   );

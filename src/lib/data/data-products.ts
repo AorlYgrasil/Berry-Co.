@@ -28,7 +28,8 @@ function toProductWithCategory(
     category_name: top?.name ?? sub?.name ?? null,
     subcategory_name: sub?.name ?? leaf?.name ?? null,
     brand_name: brands?.name ?? null,   
-    series_name: series?.name ?? null,  
+    series_name: series?.name ?? null,
+    shortDescription: product.short_description ?? null,  
     // Map the junction table records into a flat array of strings
     tags: product_tags?.map((pt: any) => pt.tags?.name).filter(Boolean) ?? [],
     status: deriveProductStatus(product.stock, product.low_stock_threshold),
@@ -62,14 +63,15 @@ export async function getProducts(
     search?: string
     categoryId?: string
     status?: ProductStatus
+    inStock?: boolean
+    tags?: string[]
     page?: number
     pageSize?: number
   } = {}
 ): Promise<{ products: ProductWithCategory[]; count: number }> {
-  const { search, categoryId, status, page = 1, pageSize = 20 } = params
+  const { search, categoryId, status, inStock, tags = [], page = 1, pageSize = 20 } = params
   const supabase = await createClient()
 
-  // 2. Expand .select() to join brands, series, and tags via the junction table
   let query = supabase
     .from('products')
     .select('*, brands(name), series(name), product_tags(tags(name))')
@@ -85,6 +87,18 @@ export async function getProducts(
 
   const categoriesById = new Map(categories.map((c) => [c.id, c]))
   let products = data.map((p) => toProductWithCategory(p, categoriesById))
+
+  // Filter 1: Status / Out of stock filter
+  if (inStock) {
+    products = products.filter((p) => p.status !== 'out_of_stock')
+  }
+
+  // Filter 2: Tags filter (e.g., Pre-Order, Sale)
+ if (tags.length > 0) {
+    products = products.filter((p) =>
+      tags.every((tag) => (p.tags ?? []).includes(tag))
+    )
+  }
 
   if (status) products = products.filter((p) => p.status === status)
 

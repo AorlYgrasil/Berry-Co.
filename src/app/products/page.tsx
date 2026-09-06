@@ -14,6 +14,7 @@ type CatalogProduct = {
   price: number;
   image_url: string | null;
   description: string | null;
+  short_description: string | null;
   category_name: string | null;
   brand_name: string | null;
   series_name: string | null;
@@ -48,6 +49,11 @@ function ProductsContent() {
   const [minPrice, setMinPrice] = useState("0");
   const [maxPrice, setMaxPrice] = useState("");
   const [priceValue, setPriceValue] = useState(5000);
+
+  // 🏷️ Availability Checkbox State
+  const [isInStock, setIsInStock] = useState(false);
+  const [isPreOrder, setIsPreOrder] = useState(false);
+  const [isOnSale, setIsOnSale] = useState(false);
   
   // Dynamic State for API Data
   const [products, setProducts] = useState<CatalogProduct[]>([]);
@@ -91,13 +97,17 @@ function ProductsContent() {
     selectedCategory.length +
     selectedSeries.length +
     selectedBrand.length +
-    selectedTags.length;
+    selectedTags.length +
+    (isInStock ? 1 : 0) +
+    (isPreOrder ? 1 : 0) +
+    (isOnSale ? 1 : 0);
 
   // Frontend Filtering Logic
   const filteredProducts = useMemo(() => {
     const min = Number(minPrice) || 0;
     const max = maxPrice === "" ? Infinity : Number(maxPrice) || Infinity;
     const queryLower = query.trim().toLowerCase();
+    const hasAvailabilityFilter = isInStock || isPreOrder || isOnSale;
     
     return products.filter((item) => {
       const label = `${item.name} ${item.description ?? ''} ${item.sku} ${item.category_name ?? ''}`.toLowerCase();
@@ -118,15 +128,25 @@ function ProductsContent() {
       const matchesTags =
         selectedTags.length === 0 ||
         selectedTags.some((selectedTag) => 
-          item.tags?.some((productTag) => productTag.toLowerCase() === selectedTag.toLowerCase())
+          (item.tags ?? []).some((productTag) => productTag.toLowerCase() === selectedTag.toLowerCase())
         );
 
       const price = Number(item.price) || 0;
       const matchesPrice = price >= min && price <= max;
 
-      return matchesQuery && matchesCategory && matchesSeries && matchesBrand && matchesTags && matchesPrice;
+      // Availability Filter Logic
+      let matchesAvailability = true;
+      if (hasAvailabilityFilter) {
+        const matchesStock = isInStock && item.status !== 'out_of_stock';
+        const matchesPreOrderTag = isPreOrder && (item.tags ?? []).some((t) => t.toLowerCase() === 'pre-order');
+        const matchesSaleTag = isOnSale && (item.tags ?? []).some((t) => ['sale', 'on sale'].includes(t.toLowerCase()));
+
+        matchesAvailability = matchesStock || matchesPreOrderTag || matchesSaleTag;
+      }
+
+      return matchesQuery && matchesCategory && matchesSeries && matchesBrand && matchesTags && matchesPrice && matchesAvailability;
     });
-  }, [products, query, selectedCategory, selectedSeries, selectedBrand, selectedTags, minPrice, maxPrice]);
+  }, [products, query, selectedCategory, selectedSeries, selectedBrand, selectedTags, minPrice, maxPrice, isInStock, isPreOrder, isOnSale]);
 
   const removeTag = (tag: string) => {
     setSelectedTags((current) => current.filter((value) => value !== tag));
@@ -157,6 +177,9 @@ function ProductsContent() {
     setMinPrice("0");
     setMaxPrice("");
     setPriceValue(5000);
+    setIsInStock(false);
+    setIsPreOrder(false);
+    setIsOnSale(false);
   };
 
   return (
@@ -252,23 +275,29 @@ function ProductsContent() {
             <div className="space-y-2 text-xs font-semibold text-dark">
               <p className="text-right font-bold">Availability</p>
               <div className="flex flex-wrap justify-end gap-3">
-                <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark">
+                <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark select-none">
                   <input
                     type="checkbox"
+                    checked={isInStock}
+                    onChange={(e) => setIsInStock(e.target.checked)}
                     className="rounded border-dark text-brand focus:ring-0"
                   />
                   In-Stock
                 </label>
-                <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark">
+                <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark select-none">
                   <input
                     type="checkbox"
+                    checked={isPreOrder}
+                    onChange={(e) => setIsPreOrder(e.target.checked)}
                     className="rounded border-dark text-brand focus:ring-0"
                   />
                   Pre-Order
                 </label>
-                <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark">
+                <label className="flex items-center gap-1.5 cursor-pointer text-sm text-dark select-none">
                   <input
                     type="checkbox"
+                    checked={isOnSale}
+                    onChange={(e) => setIsOnSale(e.target.checked)}
                     className="rounded border-dark text-brand focus:ring-0"
                   />
                   On Sale
@@ -350,10 +379,46 @@ function ProductsContent() {
                   </button>
                 ))}
 
+                {isInStock && (
+                  <button
+                    type="button"
+                    onClick={() => setIsInStock(false)}
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
+                  >
+                    In-Stock
+                    <span>×</span>
+                  </button>
+                )}
+
+                {isPreOrder && (
+                  <button
+                    type="button"
+                    onClick={() => setIsPreOrder(false)}
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
+                  >
+                    Pre-Order
+                    <span>×</span>
+                  </button>
+                )}
+
+                {isOnSale && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOnSale(false)}
+                    className="inline-flex items-center gap-2 rounded-full bg-cream px-3 py-1 text-xs font-bold text-dark cursor-pointer hover:bg-brand hover:text-white transition-colors"
+                  >
+                    On Sale
+                    <span>×</span>
+                  </button>
+                )}
+
                 {selectedCategory.length === 0 &&
                   selectedSeries.length === 0 &&
                   selectedBrand.length === 0 &&
-                  selectedTags.length === 0 && (
+                  selectedTags.length === 0 &&
+                  !isInStock &&
+                  !isPreOrder &&
+                  !isOnSale && (
                     <span className="text-sm font-semibold text-dark/70">
                       No filters selected
                     </span>
@@ -387,7 +452,8 @@ function ProductsContent() {
                   id: item.id,
                   company: item.brand_name ?? "Berry Co.",
                   name: item.name,
-                  description: item.description ?? item.sku,
+                  description: item.description ?? undefined,
+                  shortDescription: item.short_description ?? undefined,
                   price: `₱${Number(item.price).toLocaleString('en-PH')}`,
                   imageUrl: item.image_url ?? undefined,
                   category: item.category_name ?? undefined,
