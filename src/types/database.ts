@@ -34,11 +34,13 @@ export interface Product {
   stock: number
   low_stock_threshold: number
   category_id: string | null
-  brand_id: string | null // Added
-  series_id: string | null // Added
-  tags: string[] | null // Added
+  brand_id: string | null
+  series_id: string | null
+  tags: string[] | null
   description: string | null
-  image_url: string | null
+  specifications: string | null
+  image_url: string | null;
+  image_urls: string[] | null;
   created_at: string
   updated_at: string
 }
@@ -50,9 +52,14 @@ export type ProductStatus = 'active' | 'out_of_stock' | 'low_stock'
 export interface ProductWithCategory extends Product {
   category_name: string | null
   subcategory_name: string | null
-  brand_name: string | null // Added
-  series_name: string | null // Added
+  brand_name: string | null
+  series_name: string | null
   status: ProductStatus
+
+  // 👈 Joined relation objects from Supabase queries
+  category?: { id?: string; name: string } | null
+  brand?: { id?: string; name: string } | null
+  series?: { id?: string; name: string } | null
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'

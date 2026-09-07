@@ -71,15 +71,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {/* Main Grid Content */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
           
-          {/* 1️⃣ Photo Gallery Card (Mobile: 1st | Desktop: Top-Left) */}
-          <div className="lg:col-span-8 lg:col-start-1 lg:row-start-1 rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10">
-            <ProductGallery name={product.name} imageUrl={product.image_url} />
+          {/* 1️⃣ Gallery Section (Mobile: 1st | Desktop: Top-Left) */}
+          <div className="lg:col-span-8 lg:col-start-1 lg:row-start-1">
+            <ProductGallery
+            name={product.name}
+            imageUrl={product.image_url}
+            images={product.image_urls}
+            />
           </div>
 
           {/* 2️⃣ Sticky Buy Box Panel (Mobile: 2nd | Desktop: Top-Right) */}
           <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-24">
             <ProductBuyBox
               productId={product.id}
+              sku={product.sku}
+              stock={product.stock}
               name={product.name}
               price={`₱${Number(product.price).toLocaleString('en-PH')}`}
               status={status}
@@ -95,7 +101,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
               canReview={Boolean(session)}
               reviews={reviews}
               description={productDescription}
-              specs={[`SKU: ${product.sku}`, `Stock: ${product.stock} unit(s)`]}
+              seriesName={product.series?.name ?? product.series_name}
+              brandName={product.brand?.name ?? product.brand_name}
+              categoryName={product.category?.name ?? product.category_name}
+              specifications={product.specifications}
             />
           </div>
 

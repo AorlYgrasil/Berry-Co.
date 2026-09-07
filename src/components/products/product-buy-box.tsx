@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 type BuyBoxProps = {
   productId: string;
+  sku?: string;
+  stock?: number;
   name: string;
   price: string;
   status: "In Stock" | "Pre-orders Open" | "Out of Stock" | "Sold Out" | string;
@@ -15,6 +17,8 @@ type BuyBoxProps = {
 
 export default function ProductBuyBox({
   productId,
+  sku,
+  stock,
   name,
   price,
   status,
@@ -102,17 +106,27 @@ export default function ProductBuyBox({
   return (
     <div className="rounded-4xl bg-[#F4ECE1] p-6 shadow-xs border border-dark/10 space-y-5">
       
-      {/* Product title */}
+      {/* SKU & Product Title */}
       <div className="text-right">
+        {sku && (
+          <p className="text-[11px] font-black uppercase tracking-wider text-dark/40 mb-1">
+            SKU: {sku}
+          </p>
+        )}
         <h1 className="text-3xl font-black leading-tight tracking-tight text-dark sm:text-4xl">{name}</h1>
       </div>
 
-      {/* Price & Status */}
-      <div className="text-right space-y-1">
+      {/* Price, Status & Stock */}
+      <div className="text-right space-y-0.5">
         <p className="text-2xl font-black text-dark">{price}</p>
         <p className={`text-xs font-bold ${getStatusColor()}`}>
           {status}
         </p>
+        {typeof stock === "number" && (
+          <p className="text-[11px] font-semibold text-dark/50">
+            {stock > 0 ? `${stock} unit(s) available` : "0 units in stock"}
+          </p>
+        )}
       </div>
 
       {/* 📅 Pre-order Period Banner */}
