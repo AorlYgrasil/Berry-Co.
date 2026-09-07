@@ -117,7 +117,7 @@ export default function CartPage() {
                   <div>
                     <h3 className="font-bold text-sm text-dark">{item.name}</h3>
                     <p className="text-xs text-dark/70">{item.category}</p>
-                    <p className="font-extrabold text-sm text-dark mt-1">${item.price}</p>
+                    <p className="font-extrabold text-sm text-dark mt-1">₱{item.price}</p>
                   </div>
                 </div>
 
