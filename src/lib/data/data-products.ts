@@ -5,6 +5,23 @@ export interface CategoryNode extends Category {
   children: CategoryNode[]
 }
 
+export interface ProductMetadataOptions {
+  brands: { id: string; name: string }[]
+  series: { id: string; name: string }[]
+  tags: { id: string; name: string }[]
+}
+
+export async function getProductMetadataOptions(): Promise<ProductMetadataOptions> {
+  const supabase = await createClient()
+  const [{ data: brands }, { data: series }, { data: tags }] = await Promise.all([
+    supabase.from('brands').select('id, name').order('name'),
+    supabase.from('series').select('id, name').order('name'),
+    supabase.from('tags').select('id, name').order('name'),
+  ])
+
+  return { brands: brands ?? [], series: series ?? [], tags: tags ?? [] }
+}
+
 export function deriveProductStatus(stock: number, lowStockThreshold: number): ProductStatus {
   if (stock <= 0) return 'out_of_stock'
   if (stock <= lowStockThreshold) return 'low_stock'

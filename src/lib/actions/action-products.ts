@@ -16,6 +16,21 @@ function generateSku(name: string) {
   return `${base}-${suffix}`
 }
 
+async function syncProductTags(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  productId: string,
+  tagIds: string[]
+) {
+  const { error: deleteError } = await supabase.from('product_tags').delete().eq('product_id', productId)
+  if (deleteError) return deleteError
+  if (tagIds.length === 0) return null
+
+  const { error } = await supabase.from('product_tags').insert(
+    tagIds.map((tagId) => ({ product_id: productId, tag_id: tagId }))
+  )
+  return error
+}
+
 async function validateCategorySelection(
   supabase: Awaited<ReturnType<typeof createClient>>,
   categoryId: string,
@@ -45,6 +60,9 @@ export async function createProduct(
   let sku = String(formData.get('sku') ?? '').trim()
   const categoryId = String(formData.get('category_id') ?? '')
   const subcategoryId = String(formData.get('subcategory_id') ?? '')
+  const brandId = String(formData.get('brand_id') ?? '')
+  const seriesId = String(formData.get('series_id') ?? '')
+  const tagIds = formData.getAll('tag_ids').map(String).filter(Boolean)
 
   if (!name) return { error: 'Product name is required.' }
   if (Number.isNaN(price) || price < 0) return { error: 'Enter a valid price.' }
@@ -64,6 +82,8 @@ export async function createProduct(
     stock,
     low_stock_threshold: Number(formData.get('low_stock_threshold') ?? 5),
     category_id: subcategoryId || categoryId || null,
+    brand_id: brandId || null,
+    series_id: seriesId || null,
     description: String(formData.get('description') ?? '') || null,
     image_url: String(formData.get('image_url') ?? '') || null,
   }
@@ -74,6 +94,9 @@ export async function createProduct(
     if (error.code === '23505') return { error: 'That SKU is already in use.' }
     return { error: error.message }
   }
+
+  const tagError = await syncProductTags(supabase, data.id, tagIds)
+  if (tagError) return { error: tagError.message }
 
   revalidatePath('/admin/products')
   redirect(`/admin/products/${data.id}`)
@@ -91,6 +114,9 @@ export async function updateProduct(
   const price = Number(formData.get('price') ?? 0)
   const categoryId = String(formData.get('category_id') ?? '')
   const subcategoryId = String(formData.get('subcategory_id') ?? '')
+  const brandId = String(formData.get('brand_id') ?? '')
+  const seriesId = String(formData.get('series_id') ?? '')
+  const tagIds = formData.getAll('tag_ids').map(String).filter(Boolean)
 
   if (!name) return { error: 'Product name is required.' }
   if (!sku) return { error: 'SKU is required.' }
@@ -108,6 +134,8 @@ export async function updateProduct(
     price,
     low_stock_threshold: Number(formData.get('low_stock_threshold') ?? 5),
     category_id: subcategoryId || categoryId || null,
+    brand_id: brandId || null,
+    series_id: seriesId || null,
     description: String(formData.get('description') ?? '') || null,
     image_url: String(formData.get('image_url') ?? '') || null,
     updated_at: new Date().toISOString(),
@@ -119,6 +147,9 @@ export async function updateProduct(
     if (error.code === '23505') return { error: 'That SKU is already in use.' }
     return { error: error.message }
   }
+
+  const tagError = await syncProductTags(supabase, id, tagIds)
+  if (tagError) return { error: tagError.message }
 
   revalidatePath('/admin/products')
   revalidatePath(`/admin/products/${id}`)

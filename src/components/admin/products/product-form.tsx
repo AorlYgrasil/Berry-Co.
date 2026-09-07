@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import CategoryFields from './category-fields'
-import type { CategoryNode } from '@/lib/data/data-products'
+import type { CategoryNode, ProductMetadataOptions } from '@/lib/data/data-products'
 import type { ProductWithCategory } from '@/types/database'
 
 type FormState = { error: string | null }
@@ -14,11 +14,13 @@ export default function ProductForm({
   action,
   categories,
   product,
+  metadata,
   submitLabel = 'Save',
 }: {
   action: (prevState: FormState, formData: FormData) => Promise<FormState>
   categories: CategoryNode[]
   product?: ProductWithCategory
+  metadata: ProductMetadataOptions
   submitLabel?: string
 }) {
   const [state, formAction, pending] = useActionState(action, { error: null })
@@ -50,6 +52,51 @@ export default function ProductForm({
         <div className="sm:col-span-2">
           <CategoryFields categories={categories} defaultValue={product?.category_id ?? undefined} />
         </div>
+
+        <div>
+          <label htmlFor="brand_id" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Brand
+          </label>
+          <select id="brand_id" name="brand_id" defaultValue={product?.brand_id ?? ''} className={inputClass}>
+            <option value="">Select a brand...</option>
+            {metadata.brands.map((brand) => (
+              <option key={brand.id} value={brand.id}>{brand.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="series_id" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Series
+          </label>
+          <select id="series_id" name="series_id" defaultValue={product?.series_id ?? ''} className={inputClass}>
+            <option value="">Select a series...</option>
+            {metadata.series.map((series) => (
+              <option key={series.id} value={series.id}>{series.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <fieldset className="sm:col-span-2">
+          <legend className="mb-1.5 block text-sm font-medium text-stone-700">Product tags</legend>
+          <div className="grid gap-2 rounded-xl border border-stone-300 bg-white p-3 sm:grid-cols-2">
+            {metadata.tags.map((tag) => (
+              <label key={tag.id} className="flex items-center gap-2 text-sm text-stone-700">
+                <input
+                  type="checkbox"
+                  name="tag_ids"
+                  value={tag.id}
+                  defaultChecked={product?.tags?.includes(tag.name)}
+                  className="accent-[#d9483a]"
+                />
+                {tag.name}
+              </label>
+            ))}
+            {metadata.tags.length === 0 && (
+              <span className="text-sm text-stone-400">No tags configured yet.</span>
+            )}
+          </div>
+        </fieldset>
 
         {product ? (
           <div>

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { buildCategoryTree, getCategories, getProductById } from '@/lib/data/data-products'
+import { buildCategoryTree, getCategories, getProductById, getProductMetadataOptions } from '@/lib/data/data-products'
 import { updateProduct } from '@/lib/actions/action-products'
 import ProductForm from '@/components/admin/products/product-form'
 import StockAdjust from '@/components/admin/products/stock-adjust'
@@ -11,7 +11,11 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const [product, categories] = await Promise.all([getProductById(id), getCategories()])
+  const [product, categories, metadata] = await Promise.all([
+    getProductById(id),
+    getCategories(),
+    getProductMetadataOptions(),
+  ])
 
   if (!product) notFound()
 
@@ -32,6 +36,7 @@ export default async function EditProductPage({
         <ProductForm
           action={boundUpdate}
           categories={categoryTree}
+          metadata={metadata}
           product={product}
           submitLabel="Save Changes"
         />
