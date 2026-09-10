@@ -38,6 +38,7 @@ export interface Product {
   series_id: string | null
   tags: string[] | null
   description: string | null
+  short_description?: string | null
   specifications: string | null
   image_url: string | null;
   image_urls: string[] | null;

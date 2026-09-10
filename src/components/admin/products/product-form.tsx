@@ -37,11 +37,13 @@ export default function ProductForm({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {/* Product Name */}
         <div className="sm:col-span-2">
           <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-stone-700">
             Product name
           </label>
           <input
+            id="name"
             name="name"
             required
             defaultValue={product?.name}
@@ -49,10 +51,26 @@ export default function ProductForm({
           />
         </div>
 
+        {/* Short Description */}
+        <div className="sm:col-span-2">
+          <label htmlFor="short_description" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Short Description / Subtitle
+          </label>
+          <input
+            id="short_description"
+            name="short_description"
+            defaultValue={product?.short_description ?? ''}
+            placeholder="e.g. Nendoroid Scale"
+            className={inputClass}
+          />
+        </div>
+
+        {/* Categories */}
         <div className="sm:col-span-2">
           <CategoryFields categories={categories} defaultValue={product?.category_id ?? undefined} />
         </div>
 
+        {/* Brand */}
         <div>
           <label htmlFor="brand_id" className="mb-1.5 block text-sm font-medium text-stone-700">
             Brand
@@ -65,6 +83,7 @@ export default function ProductForm({
           </select>
         </div>
 
+        {/* Series */}
         <div>
           <label htmlFor="series_id" className="mb-1.5 block text-sm font-medium text-stone-700">
             Series
@@ -77,6 +96,7 @@ export default function ProductForm({
           </select>
         </div>
 
+        {/* Product Tags */}
         <fieldset className="sm:col-span-2">
           <legend className="mb-1.5 block text-sm font-medium text-stone-700">Product tags</legend>
           <div className="grid gap-2 rounded-xl border border-stone-300 bg-white p-3 sm:grid-cols-2">
@@ -98,6 +118,7 @@ export default function ProductForm({
           </div>
         </fieldset>
 
+        {/* SKU */}
         {product ? (
           <div>
             <label htmlFor="sku" className="mb-1.5 block text-sm font-medium text-stone-700">
@@ -114,6 +135,7 @@ export default function ProductForm({
           <input type="hidden" name="sku" value="" />
         )}
 
+        {/* Price */}
         <div>
           <label htmlFor="price" className="mb-1.5 block text-sm font-medium text-stone-700">
             Price (₱)
@@ -130,6 +152,7 @@ export default function ProductForm({
           />
         </div>
 
+        {/* Starting Stock (New Product only) */}
         {!product && (
           <div>
             <label htmlFor="stock" className="mb-1.5 block text-sm font-medium text-stone-700">
@@ -146,6 +169,7 @@ export default function ProductForm({
           </div>
         )}
 
+        {/* Low Stock Alert */}
         <div>
           <label
             htmlFor="low_stock_threshold"
@@ -163,9 +187,10 @@ export default function ProductForm({
           />
         </div>
 
+        {/* Cover Image URL */}
         <div className="sm:col-span-2">
           <label htmlFor="image_url" className="mb-1.5 block text-sm font-medium text-stone-700">
-            Image URL
+            Cover Image URL
           </label>
           <input
             id="image_url"
@@ -175,6 +200,22 @@ export default function ProductForm({
           />
         </div>
 
+        {/* Gallery Image URLs Array */}
+        <div className="sm:col-span-2">
+          <label htmlFor="image_urls" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Gallery Image URLs <span className="text-xs text-stone-400 font-normal">(One URL per line)</span>
+          </label>
+          <textarea
+            id="image_urls"
+            name="image_urls"
+            rows={4}
+            defaultValue={product?.image_urls?.join('\n') ?? ''}
+            placeholder={`https://example.com/angle-1.jpg\nhttps://example.com/angle-2.jpg`}
+            className={inputClass}
+          />
+        </div>
+
+        {/* Full Description */}
         <div className="sm:col-span-2">
           <label htmlFor="description" className="mb-1.5 block text-sm font-medium text-stone-700">
             Description
@@ -184,6 +225,21 @@ export default function ProductForm({
             name="description"
             rows={4}
             defaultValue={product?.description ?? ''}
+            className={inputClass}
+          />
+        </div>
+
+        {/* Specifications */}
+        <div className="sm:col-span-2">
+          <label htmlFor="specifications" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Specifications
+          </label>
+          <textarea
+            id="specifications"
+            name="specifications"
+            rows={3}
+            defaultValue={product?.specifications ?? ''}
+            placeholder="e.g. Painted ABS&PVC non-scale articulated figure with stand included. Approximately 100mm in height."
             className={inputClass}
           />
         </div>

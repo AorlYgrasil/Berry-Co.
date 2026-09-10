@@ -20,24 +20,25 @@ export default async function HomePage() {
               Products
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ItemCard
-                  key={product.id}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+              {products.map((item) => (
+                  <ItemCard
+                  key={item.id}
                   item={{
-                    id: product.id,
-                    company: "Berry Co.",
-                    name: product.name,
-                    description:
-                      product.description?.trim() ||
-                      `${product.name} is part of our curated collectible collection, built for collectors and fans who want premium detail and standout design.`,
-                    price: `₱${Number(product.price).toLocaleString("en-PH")}`,
-                    imageUrl: product.image_url ?? undefined,
-                    status: product.status,
-                  }}
-                />
-              ))}
-            </div>
+                        id: item.id,
+                        company: item.brand_name ?? "Berry Co.",
+                        name: item.name,
+                        description: item.description ?? undefined,
+                        shortDescription: item.short_description ?? undefined,
+                        price: `₱${Number(item.price).toLocaleString('en-PH')}`,
+                        imageUrl: item.image_url ?? undefined,
+                        category: item.category_name ?? undefined,
+                        status: item.status,
+                        tags: item.tags ?? [],
+                      }}
+                  />
+                ))}
+              </div>
 
             {products.length === 0 && (
               <p className="py-12 text-center text-sm font-semibold text-dark/60">
