@@ -42,6 +42,10 @@ export default function ProductBuyBox({
       body: JSON.stringify({ productId, quantity: 1 }),
     });
     const data = await response.json();
+    if (response.status === 401) {
+      router.push('/login');
+      return;
+    }
     if (!response.ok) {
       setError(data.error ?? 'Unable to add this item to your cart.');
       return;

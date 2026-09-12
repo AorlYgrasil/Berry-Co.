@@ -187,6 +187,66 @@ export default function ProductForm({
           />
         </div>
 
+        {/* Pre-order and sale details */}
+        <div>
+          <label htmlFor="preorder_start_date" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Pre-order start date
+          </label>
+          <input
+            id="preorder_start_date"
+            name="preorder_start_date"
+            type="date"
+            defaultValue={product?.preorder_start_date?.slice(0, 10) ?? ''}
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="preorder_end_date" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Pre-order end date
+          </label>
+          <input
+            id="preorder_end_date"
+            name="preorder_end_date"
+            type="date"
+            defaultValue={product?.preorder_end_date?.slice(0, 10) ?? ''}
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="release_date" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Release date
+          </label>
+          <input
+            id="release_date"
+            name="release_date"
+            type="date"
+            defaultValue={product?.release_date?.slice(0, 10) ?? ''}
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="sale_percentage" className="mb-1.5 block text-sm font-medium text-stone-700">
+            Sale percentage
+          </label>
+          <div className="relative">
+            <input
+              id="sale_percentage"
+              name="sale_percentage"
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              defaultValue={product?.sale_percentage ?? ''}
+              placeholder="e.g. 15"
+              className={`${inputClass} pr-10`}
+            />
+            <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-stone-400">%</span>
+          </div>
+        </div>
+
         {/* Cover Image URL */}
         <div className="sm:col-span-2">
           <label htmlFor="image_url" className="mb-1.5 block text-sm font-medium text-stone-700">

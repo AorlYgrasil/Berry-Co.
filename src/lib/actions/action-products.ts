@@ -16,6 +16,30 @@ function generateSku(name: string) {
   return `${base}-${suffix}`
 }
 
+function parseProductDates(formData: FormData) {
+  const preorderStartDate = String(formData.get('preorder_start_date') ?? '').trim()
+  const preorderEndDate = String(formData.get('preorder_end_date') ?? '').trim()
+  const releaseDate = String(formData.get('release_date') ?? '').trim()
+  const salePercentageValue = String(formData.get('sale_percentage') ?? '').trim()
+  const salePercentage = salePercentageValue === '' ? null : Number(salePercentageValue)
+
+  if (salePercentage !== null && (!Number.isInteger(salePercentage) || salePercentage < 0 || salePercentage > 100)) {
+    return { error: 'Sale percentage must be a whole number from 0 to 100.' }
+  }
+  if (preorderStartDate && preorderEndDate && preorderEndDate < preorderStartDate) {
+    return { error: 'Pre-order end date cannot be before the start date.' }
+  }
+
+  return {
+    values: {
+      preorder_start_date: preorderStartDate || null,
+      preorder_end_date: preorderEndDate || null,
+      release_date: releaseDate || null,
+      sale_percentage: salePercentage,
+    },
+  }
+}
+
 async function syncProductTags(
   supabase: Awaited<ReturnType<typeof createClient>>,
   productId: string,
@@ -70,6 +94,9 @@ export async function createProduct(
   if (!subcategoryId) return { error: 'Select a subcategory.' }
   if (!sku) sku = generateSku(name)
 
+  const productDates = parseProductDates(formData)
+  if (productDates.error) return { error: productDates.error }
+
   const supabase = await createClient()
   if (!(await validateCategorySelection(supabase, categoryId, subcategoryId))) {
     return { error: 'Select a valid category and subcategory.' }
@@ -84,6 +111,7 @@ export async function createProduct(
     category_id: subcategoryId || categoryId || null,
     brand_id: brandId || null,
     series_id: seriesId || null,
+    ...productDates.values,
     description: String(formData.get('description') ?? '') || null,
     image_url: String(formData.get('image_url') ?? '') || null,
   }
@@ -123,6 +151,9 @@ export async function updateProduct(
   if (Number.isNaN(price) || price < 0) return { error: 'Enter a valid price.' }
   if (!subcategoryId) return { error: 'Select a subcategory.' }
 
+  const productDates = parseProductDates(formData)
+  if (productDates.error) return { error: productDates.error }
+
   const supabase = await createClient()
   if (!(await validateCategorySelection(supabase, categoryId, subcategoryId))) {
     return { error: 'Select a valid category and subcategory.' }
@@ -136,6 +167,7 @@ export async function updateProduct(
     category_id: subcategoryId || categoryId || null,
     brand_id: brandId || null,
     series_id: seriesId || null,
+    ...productDates.values,
     description: String(formData.get('description') ?? '') || null,
     image_url: String(formData.get('image_url') ?? '') || null,
     updated_at: new Date().toISOString(),

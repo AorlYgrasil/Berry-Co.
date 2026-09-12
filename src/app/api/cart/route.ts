@@ -14,6 +14,14 @@ async function resolveOwner() {
   return { guestToken };
 }
 
+async function resolveAuthenticatedOwner() {
+  const session = await getSession();
+  if (!session) {
+    throw Object.assign(new Error("UNAUTHENTICATED"), { status: 401 });
+  }
+  return { userId: session.userId };
+}
+
 // GET /api/cart — powers the Cart page and the cart icon item count
 export async function GET() {
   try {
@@ -28,7 +36,7 @@ export async function GET() {
 // POST /api/cart  { productId, quantity } — "Add to Cart" button on the Product Page
 export async function POST(req: NextRequest) {
   try {
-    const owner = await resolveOwner();
+    const owner = await resolveAuthenticatedOwner();
     const { productId, quantity = 1 } = await req.json();
     if (!productId) {
       return NextResponse.json({ error: "productId is required" }, { status: 400 });

@@ -37,6 +37,10 @@ export interface Product {
   brand_id: string | null
   series_id: string | null
   tags: string[] | null
+  preorder_start_date: string | null
+  preorder_end_date: string | null
+  release_date: string | null
+  sale_percentage: number | null
   description: string | null
   short_description?: string | null
   specifications: string | null
