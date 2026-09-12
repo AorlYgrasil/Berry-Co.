@@ -112,8 +112,14 @@ export async function createProduct(
     brand_id: brandId || null,
     series_id: seriesId || null,
     ...productDates.values,
+    short_description: String(formData.get('short_description') ?? '').trim() || null,
     description: String(formData.get('description') ?? '') || null,
+    specifications: String(formData.get('specifications') ?? '').trim() || null,
     image_url: String(formData.get('image_url') ?? '') || null,
+    image_urls: String(formData.get('image_urls') ?? '')
+      .split(/\r?\n/)
+      .map((url) => url.trim())
+      .filter(Boolean),
   }
 
   const { data, error } = await supabase.from('products').insert(payload).select('id').single()
@@ -168,8 +174,14 @@ export async function updateProduct(
     brand_id: brandId || null,
     series_id: seriesId || null,
     ...productDates.values,
+    short_description: String(formData.get('short_description') ?? '').trim() || null,
     description: String(formData.get('description') ?? '') || null,
+    specifications: String(formData.get('specifications') ?? '').trim() || null,
     image_url: String(formData.get('image_url') ?? '') || null,
+    image_urls: String(formData.get('image_urls') ?? '')
+      .split(/\r?\n/)
+      .map((url) => url.trim())
+      .filter(Boolean),
     updated_at: new Date().toISOString(),
   }
 
